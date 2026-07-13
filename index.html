@@ -318,6 +318,10 @@
     </div>
 
     <script>
+        // ===== Google Apps Script Web App 連線設定 =====
+        const API_URL = "https://script.google.com/macros/s/AKfycbzstDke9za64YszIOvH2tcMfY1A2e0LKwCNL0EBLWBgDMV1eiQzIP29o1s9GX193L8m/exec";
+        const HOST_PASSWORD = "1234";
+
         let currentMode = 'player';
         let currentPlayerName = '';
         let currentSelections = {}; 
@@ -330,38 +334,82 @@
             result: null
         };
 
-        window.onload = function() {
-            loadFromStorage();
+        // ===== API Helper 函數 =====
+        async function apiGet(action) {
+            const res = await fetch(`${API_URL}?action=${encodeURIComponent(action)}`);
+            return res.json();
+        }
+        async function apiPost(payload) {
+            // 使用 text/plain 避免瀏覽器對 Apps Script 發出 CORS preflight 請求
+            const res = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            });
+            return res.json();
+        }
+
+        // 從 Google Sheet 抓取所有玩家最新資料，更新到 systemData
+        async function refreshPlayersFromServer() {
+            try {
+                const data = await apiGet('getPlayers');
+                if (data.status === 'success') {
+                    const newPlayers = {};
+                    data.players.forEach(p => {
+                        newPlayers[p.playerName] = {
+                            selections: p.selections,
+                            status: p.status,
+                            totalOdds: p.totalOdds,
+                            toReturn: p.expectedReturn,
+                            finalReturn: p.finalReturn
+                        };
+                    });
+                    systemData.players = newPlayers;
+                    systemData.result = data.matchResult || null;
+                }
+            } catch (err) {
+                console.error('讀取 Google Sheet 資料失敗：', err);
+            }
+        }
+
+        window.onload = async function() {
+            await refreshPlayersFromServer();
             checkPlayerStatus();
             renderHostDashboard();
-            setInterval(() => {
-                loadFromStorage();
+            setInterval(async () => {
+                await refreshPlayersFromServer();
                 renderHostDashboard();
                 checkPlayerStatus();
             }, 2000);
         };
 
-        function saveToStorage() { localStorage.setItem('b365_sgp_data', JSON.stringify(systemData)); }
-        function loadFromStorage() {
-            const d = localStorage.getItem('b365_sgp_data');
-            if(d) systemData = JSON.parse(d);
-        }
-
-        function resetAllData() {
+        async function resetAllData() {
             if(confirm("確定要清空世界盃全體數據重設嗎？")) {
-                localStorage.removeItem('b365_sgp_data');
+                try {
+                    await apiPost({ action: 'resetGame' });
+                } catch(err) {
+                    alert('無法連線到伺服器，請檢查網路連線');
+                    return;
+                }
                 location.reload();
             }
         }
 
         function toggleMode() {
             if(currentMode === 'player') {
+                const pwd = prompt("請輸入 Host 密碼：");
+                if (pwd === null) return;
+                if (pwd !== HOST_PASSWORD) {
+                    alert("密碼錯誤！");
+                    return;
+                }
                 currentMode = 'host';
                 document.getElementById('playerView').classList.add('hidden');
                 document.getElementById('hostView').classList.remove('hidden');
                 document.getElementById('betSlip').style.display = 'none';
                 document.body.classList.remove('slip-active');
                 document.getElementById('btnToggleMode').innerText = '切換至 玩家投注手機端';
+                renderHostDashboard();
             } else {
                 currentMode = 'player';
                 document.getElementById('hostView').classList.add('hidden');
@@ -371,15 +419,30 @@
             }
         }
 
-        function loginPlayer() {
+        async function loginPlayer() {
             const name = document.getElementById('playerNameInput').value.trim();
             if(!name) return alert("請輸入有效名字！");
             currentPlayerName = name;
-            
-            if(!systemData.players[currentPlayerName]) {
-                systemData.players[currentPlayerName] = { selections: {}, status: 'open', totalOdds: 0, toReturn: 0, finalReturn: 0 };
-                saveToStorage();
+
+            try {
+                const data = await apiPost({ action: 'registerPlayer', playerName: name });
+                if (data.status === 'success') {
+                    systemData.players[name] = {
+                        selections: data.player.selections,
+                        status: data.player.status,
+                        totalOdds: data.player.totalOdds,
+                        toReturn: data.player.expectedReturn,
+                        finalReturn: data.player.finalReturn
+                    };
+                } else {
+                    alert('登入失敗：' + data.message);
+                    return;
+                }
+            } catch(err) {
+                alert('無法連線到伺服器，請檢查網路連線');
+                return;
             }
+
             document.getElementById('loginSection').classList.add('hidden');
             document.getElementById('currentUserTag').innerText = "👤 " + currentPlayerName;
             document.getElementById('currentUserTag').classList.remove('hidden');
@@ -475,8 +538,7 @@
             document.getElementById('lblToReturn').innerText = toReturn.toFixed(2);
         }
 
-        function submitFinalBetSlip() {
-            loadFromStorage();
+        async function submitFinalBetSlip() {
             const keys = Object.keys(currentSelections);
             if(keys.length === 0) return alert("請至少選擇一個投注項目！");
             
@@ -484,12 +546,29 @@
             keys.forEach(k => finalMultiOdds *= currentSelections[k].odds);
             
             if(confirm(`確認使用整筆 $10 下注此過關單嗎？\n總共 ${keys.length} 個項目，總賠率為 @${finalMultiOdds.toFixed(2)}\n送出後將不可重選！`)) {
+                const toReturn = finalMultiOdds * 10;
+                try {
+                    const data = await apiPost({
+                        action: 'submitBet',
+                        playerName: currentPlayerName,
+                        selections: currentSelections,
+                        totalOdds: finalMultiOdds,
+                        toReturn: toReturn
+                    });
+                    if (data.status !== 'success') {
+                        alert('送出失敗：' + data.message);
+                        return;
+                    }
+                } catch(err) {
+                    alert('無法連線到伺服器，請稍後再試');
+                    return;
+                }
+
                 systemData.players[currentPlayerName].selections = JSON.parse(JSON.stringify(currentSelections));
                 systemData.players[currentPlayerName].status = 'locked';
                 systemData.players[currentPlayerName].totalOdds = finalMultiOdds;
-                systemData.players[currentPlayerName].toReturn = finalMultiOdds * 10;
+                systemData.players[currentPlayerName].toReturn = toReturn;
                 systemData.players[currentPlayerName].finalReturn = 0; 
-                saveToStorage();
                 checkPlayerStatus();
             }
         }
@@ -517,51 +596,25 @@
             }
         }
 
-        function settleMatch() {
+        async function settleMatch() {
             const score = document.getElementById('res_score').value.trim();
             const advance = document.getElementById('res_advance').value;
             const scorer = document.getElementById('res_scorer').value;
             
             if(!score) return alert("請輸入正確比分比數！");
-            
-            const parts = score.split('-');
-            const home = parseInt(parts[0]);
-            const away = parseInt(parts[1]);
-            const total = home + away;
-            
-            let win1X2 = (home > away) ? '法國 勝' : (home < away ? '西班牙 勝' : '和局');
-            let winOU = (total > 2.5) ? 'Over 2.5 (大球)' : 'Under 2.5 (小球)';
-            
-            systemData.result = { score, advance, scorer };
-            
-            for(let name in systemData.players) {
-                let p = systemData.players[name];
-                if(p.status !== 'locked') {
-                    p.finalReturn = 0;
-                    continue;
+
+            try {
+                const data = await apiPost({ action: 'settleMatch', score, advance, scorer });
+                if (data.status !== 'success') {
+                    alert('結算失敗：' + data.message);
+                    return;
                 }
-                
-                let allConditionsMet = true;
-                let selectionCount = 0;
-                
-                for(let market in p.selections) {
-                    selectionCount++;
-                    let choice = p.selections[market].choice;
-                    
-                    if(market === '90分鐘+補時' && choice !== win1X2) allConditionsMet = false;
-                    if(market === 'advance' && choice !== advance) allConditionsMet = false;
-                    if(market === 'total_goals' && choice !== winOU) allConditionsMet = false;
-                    if(market === 'correct_score' && choice !== score) allConditionsMet = false;
-                    if(market === 'player_score' && choice !== scorer) allConditionsMet = false;
-                }
-                
-                if(selectionCount > 0 && allConditionsMet) {
-                    p.finalReturn = p.toReturn; 
-                } else {
-                    p.finalReturn = 0; 
-                }
+            } catch(err) {
+                alert('無法連線到伺服器，請稍後再試');
+                return;
             }
-            saveToStorage();
+
+            await refreshPlayersFromServer();
             renderHostDashboard();
             alert("世界盃決賽大螢幕排行榜結算完成！");
         }
