@@ -1,611 +1,971 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>bet365 - Same Game Parlay Simulator</title>
+    <title>Real-Time Betting Party</title>
+    
+    <!-- External Icons & Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@300;400;500;700&family=Google+Sans+Flex:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
     <style>
         :root {
-            --b365-dark-green: #123123;
-            --b365-mid-green: #005a42;
-            --b365-light-green: #137a5c;
-            --b365-yellow: #ffdf1b;
-            --b365-bg: #1a1a1a;
-            --b365-card-bg: #282828;
-            --b365-text-main: #ffffff;
-            --b365-text-muted: #8e8e8e;
-            --b365-border: #383838;
-            --b365-bright-green: #00ff7f;
+            --primary: #0b57d0;
+            --surface-container: #f0f4f9;
+            --on-surface-default: #1b1c1d;
+            --on-surface-de-emphasis: #444746;
+            --primary-container: #d3e3fd;
+            --font-sans: 'Google Sans', 'Roboto', sans-serif;
         }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        
-        /* 核心修復：動態增加底部內邊距，防止內容被 Fixed 的投注單遮擋 */
-        body { 
-            background-color: var(--b365-bg); 
-            color: var(--b365-text-main); 
-            font-size: 14px; 
-            padding-bottom: 80px; /* 預設底部空間 */
-            transition: padding-bottom 0.3s ease;
-        } 
-        body.slip-active {
-            padding-bottom: 300px; /* 當投注單彈起時，主網頁底部自動多出 300px 空白供玩家向上滾動 */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary: #a8c7fa;
+                --surface-container: #1b1c1d;
+                --on-surface-default: #ffffff;
+                --on-surface-de-emphasis: #c4c7c5;
+                --primary-container: #1f3760;
+            }
         }
-        
-        header { background-color: var(--b365-dark-green); padding: 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--b365-yellow); position: sticky; top: 0; z-index: 100; }
-        .logo { font-weight: bold; font-size: 20px; color: var(--b365-yellow); font-style: italic; }
-        .mode-switcher { background: rgba(255,255,255,0.1); border: none; color: white; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; }
-
-        .match-header { background-color: var(--b365-mid-green); padding: 15px; text-align: center; border-bottom: 1px solid var(--b365-border); }
-        .match-title { font-size: 11px; color: var(--b365-yellow); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
-        .match-teams { font-size: 18px; font-weight: bold; display: flex; justify-content: center; align-items: center; gap: 15px; }
-        .match-vs { font-size: 12px; color: var(--b365-text-muted); }
-
-        .container { max-width: 600px; margin: 0 auto; padding: 10px; }
-        .tv-container { max-width: 1000px; }
-
-        /* Market Cards */
-        .market-card { background-color: var(--b365-card-bg); border-radius: 4px; margin-bottom: 12px; border: 1px solid var(--b365-border); overflow: hidden; }
-        .market-title { background-color: #333333; padding: 10px 12px; font-size: 13px; font-weight: bold; color: #ddd; display: flex; justify-content: space-between; align-items: center; }
-        .market-subtitle { font-size: 11px; color: var(--b365-text-muted); background: #222; padding: 2px 6px; border-radius: 2px; }
-        
-        /* Odds Grids */
-        .odds-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background-color: var(--b365-border); }
-        .odds-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background-color: var(--b365-border); }
-        .odds-button { background-color: var(--b365-card-bg); border: none; padding: 14px; color: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
-        .odds-button:hover { background-color: #333; }
-        .odds-button.active { background-color: rgba(255, 223, 27, 0.12); border: 1px solid var(--b365-yellow); }
-        .odds-label { font-size: 12px; color: #ccc; }
-        .odds-val { font-size: 14px; font-weight: bold; color: var(--b365-yellow); }
-
-        /* Correct Score Selector Component */
-        .score-selector-wrapper { display: flex; justify-content: space-around; align-items: center; padding: 15px; background: #222; }
-        .score-team-block { text-align: center; }
-        .score-team-name { font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #aaa; }
-        .counter-btn-group { display: flex; align-items: center; gap: 12px; }
-        .btn-counter { background: #444; border: none; color: white; width: 35px; height: 35px; font-size: 20px; font-weight: bold; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .btn-counter:hover { background: #555; }
-        .score-number { font-size: 24px; font-weight: bold; min-width: 25px; text-align: center; }
-        .cs-activate-btn { display: block; width: 100%; background: #333; border: none; color: var(--b365-yellow); padding: 12px; font-weight: bold; cursor: pointer; text-align: center; border-top: 1px solid var(--b365-border); font-size: 13px; }
-        .cs-activate-btn.active { background: rgba(255, 223, 27, 0.15); border: 1px solid var(--b365-yellow); color: var(--b365-bright-green); }
-
-        /* Player to Score Grid */
-        .player-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid var(--b365-border); background: #232323; }
-        .player-info { display: flex; align-items: center; gap: 8px; }
-        .player-shirt { width: 20px; height: 20px; background: #005a42; border-radius: 50%; font-size: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        .btn-player-odds { background: #333; border: 1px solid #444; color: var(--b365-yellow); padding: 8px 18px; font-weight: bold; border-radius: 4px; cursor: pointer; min-width: 70px; text-align: center; font-size: 13px; }
-        .btn-player-odds.active { background: rgba(255, 223, 27, 0.2); border-color: var(--b365-yellow); color: var(--b365-bright-green); }
-
-        /* Floating Bet Slip (Bottom Panel) */
-        .bet-slip-panel { position: fixed; bottom: 0; left: 0; right: 0; background-color: #1e1e1e; border-top: 3px solid var(--b365-bright-green); box-shadow: 0 -8px 25px rgba(0,0,0,0.7); z-index: 999; transition: transform 0.2s ease; }
-        .bet-slip-inner { max-width: 600px; margin: 0 auto; padding: 12px 15px; }
-        .parlay-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; margin-bottom: 8px; }
-        .parlay-tag { background: var(--b365-bright-green); color: black; font-size: 10px; padding: 2px 5px; border-radius: 2px; font-weight: bold; text-transform: uppercase; }
-        
-        /* 內部過關清單滾動盒 */
-        .slip-items-scroller { max-height: 110px; overflow-y: auto; background: #141414; padding: 6px; border-radius: 4px; margin-bottom: 8px; border: 1px solid #2a2a2a; }
-        .slip-item-row { font-size: 12px; color: #ccc; padding: 5px 0; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; }
-        
-        /* 溫馨提示區塊 */
-        .friend-reminder { background: rgba(255, 223, 27, 0.08); border-left: 3px solid var(--b365-yellow); padding: 8px; font-size: 11px; color: #dfdfdf; margin-bottom: 8px; border-radius: 0 4px 4px 0; line-height: 1.4; }
-
-        .wager-summary-box { display: flex; justify-content: space-between; align-items: center; background: #252525; padding: 10px; border-radius: 4px; margin-bottom: 8px; }
-        .btn-final-place { background-color: var(--b365-bright-green); color: #000; border: none; font-weight: bold; padding: 14px; width: 100%; border-radius: 4px; cursor: pointer; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .btn-final-place:hover { background-color: #00e672; }
-
-        /* Host Panel Styles */
-        .host-section { background: var(--b365-card-bg); padding: 15px; border-radius: 6px; border: 1px solid var(--b365-border); margin-bottom: 20px; }
-        .host-title { font-size: 15px; font-weight: bold; color: var(--b365-yellow); margin-bottom: 10px; }
-        .host-row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
-        .host-input-group { flex: 1; min-width: 120px; display: flex; flex-direction: column; gap: 4px; }
-        .host-input { background: #1a1a1a; border: 1px solid var(--b365-border); padding: 6px; color: white; border-radius: 4px; }
-        .btn-host { background: var(--b365-light-green); color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        
-        .tv-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
-        .dashboard-table { width: 100%; border-collapse: collapse; }
-        .dashboard-table th, .dashboard-table td { padding: 10px; text-align: left; border-bottom: 1px solid var(--b365-border); }
-        .dashboard-table th { background-color: #222; color: var(--b365-text-muted); font-size: 11px; }
-
-        .hidden { display: none !important; }
-        .locked-screen { text-align: center; padding: 50px 20px; background: var(--b365-card-bg); border-radius: 6px; border: 1px solid var(--b365-border); margin-top: 20px; }
-        .user-tag { background: #333; padding: 4px 8px; border-radius: 12px; font-size: 12px; }
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--surface-container);
+            color: var(--on-surface-default);
+        }
+        .bet-button-active {
+            animation: pulse-border 1.5s infinite;
+        }
+        @keyframes pulse-border {
+            0%, 100% { border-color: rgba(11, 87, 208, 0.4); }
+            50% { border-color: rgba(11, 87, 208, 1); }
+        }
     </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col transition-colors duration-200">
 
-    <header>
-        <div class="logo">bet365 <span style="font-size:11px; vertical-align:middle; background:#ff4d4d; color:white; padding:1px 4px; border-radius:3px;font-style:normal;">SGP</span></div>
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <span id="currentUserTag" class="user-tag hidden"></span>
-            <button class="mode-switcher" id="btnToggleMode" onclick="toggleMode()">切換至 Host 大螢幕面板</button>
-        </div>
-    </header>
+<!-- Firebase Scripts Module (Ver 11.6.1) -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    <div class="match-header">
-        <div class="match-title">2026 FIFA World Cup Final - SAME GAME PARLAY</div>
-        <div class="match-teams">
-            <span>法國 France</span>
-            <span class="match-vs">v</span>
-            <span>西班牙 Spain</span>
-        </div>
-    </div>
+// Global Environment Configurations
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'betting-party-simulator';
+const fallbackConfig = {
+    apiKey: "dummy-key-for-local-testing",
+    authDomain: "dummy.firebaseapp.com",
+    projectId: "dummy-project",
+    storageBucket: "dummy.appspot.com",
+    messagingSenderId: "123456",
+    appId: "1:123456:web:123456"
+};
+const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : fallbackConfig;
 
-    <div id="playerView" class="container">
-        <div id="loginSection" class="market-card" style="padding: 15px;">
-            <h3 style="margin-bottom: 10px; font-size:14px;">請輸入你的名字以獲取虛擬 $10：</h3>
-            <div style="display: flex; gap: 10px;">
-                <input type="text" id="playerNameInput" class="host-input" style="flex:1;" placeholder="輸入玩家名字...">
-                <button class="btn-host" onclick="loginPlayer()">進入投注盤口</button>
-            </div>
-        </div>
+// Initialize Global state object
+window.state = {
+    role: 'none', // 'none' | 'host' | 'player'
+    roomCode: '',
+    nickname: '',
+    playerId: '',
+    playerBudget: 10.00,
+    playersList: [],
+    roomState: {
+        status: 'open', // 'open' | 'locked' | 'settled'
+        settlementResults: {} // { marketId: option }
+    },
+    localBets: {}, // { marketId_option: amount }
+    notifications: [],
+    isSubmitting: false,
+    authCompleted: false,
+    debugId: ''
+};
 
-        <div id="bettingSection" class="hidden">
+// MARKETS Data Structure
+const MARKETS = [
+    { id: '1x2', label: '90mins Result (1X2)', options: ['1', 'X', '2'], odds: [2.10, 3.40, 3.80] },
+    { id: 'adv', label: 'To Advance', options: ['Team A', 'Team B'], odds: [1.65, 2.20] },
+    { id: 'ou', label: 'Over/Under 2.5 Goals', options: ['Over', 'Under'], odds: [1.90, 1.90] },
+    { id: 'score', label: 'Correct Score Selection', options: ['1-0', '2-1', '0-0', 'Other'], odds: [6.00, 9.00, 8.00, 4.00] },
+    { id: 'scorer', label: '1st Goalscorer Choice', options: ['Striker A', 'Midfield B', 'No Goal'], odds: [4.50, 7.50, 12.00] }
+];
+
+let app, db, auth;
+let authPromise = null;
+
+// Guarded Authentication Setup
+async function initFirebase() {
+    try {
+        app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        auth = getAuth(app);
+        
+        const token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        let userCredential;
+        if (token) {
+            userCredential = await signInWithCustomToken(auth, token);
+        } else {
+            userCredential = await signInAnonymously(auth);
+        }
+        
+        window.state.playerId = userCredential.user.uid;
+        window.state.debugId = userCredential.user.uid;
+        window.state.authCompleted = true;
+        renderApp();
+    } catch (e) {
+        console.error("Firebase auth handshakes failed: ", e);
+        showToast("Error establishing network security keys. Operating in offline demonstration mode.", "error");
+    }
+}
+
+// Audio feedback synthesizer (Using Web Audio API to prevent external files blocks)
+function playSynthSound(type) {
+    try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        
+        if (type === 'tap') {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.frequency.setValueAtTime(600, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.15, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.12);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.15);
+        } else if (type === 'lock') {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(400, ctx.currentTime);
+            osc.frequency.setValueAtTime(800, ctx.currentTime + 0.15);
+            gain.gain.setValueAtTime(0.2, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.45);
+        } else if (type === 'settle') {
+            // Happy victory arpeggio
+            const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+            notes.forEach((freq, idx) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.08);
+                gain.gain.setValueAtTime(0.12, ctx.currentTime + idx * 0.08);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + idx * 0.08 + 0.3);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(ctx.currentTime + idx * 0.08);
+                osc.stop(ctx.currentTime + idx * 0.08 + 0.35);
+            });
+        }
+    } catch (err) {
+        // Audio output blocked by user interaction policy
+    }
+}
+
+// Non-alert UI Notifications Panel
+function showToast(message, type = "info") {
+    const toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) return;
+    
+    const toast = document.createElement('div');
+    toast.className = `p-4 rounded-xl shadow-lg flex items-center gap-3 transition-all duration-300 transform translate-y-2 opacity-0 text-sm max-w-sm `;
+    if (type === 'error') {
+        toast.className += 'bg-red-100 text-red-800 border border-red-200 dark:bg-red-950 dark:text-red-200 dark:border-red-900';
+    } else if (type === 'success') {
+        toast.className += 'bg-green-100 text-green-800 border border-green-200 dark:bg-green-950 dark:text-green-200 dark:border-green-900';
+    } else {
+        toast.className += 'bg-blue-100 text-blue-800 border border-blue-200 dark:bg-blue-950 dark:text-blue-200 dark:border-blue-900';
+    }
+    
+    toast.innerHTML = `
+        <span class="material-icons text-base">${type === 'success' ? 'check_circle' : type === 'error' ? 'error' : 'info'}</span>
+        <span class="flex-1">${message}</span>
+    `;
+    
+    toastContainer.appendChild(toast);
+    setTimeout(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+    }, 10);
+    
+    setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-[-10px]');
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
+}
+
+// Creates a Room Entry on Firestore
+async function handleCreateRoom() {
+    if (!window.state.authCompleted) {
+        showToast("Authenticating server connection... Please try again in 1 second.", "error");
+        return;
+    }
+    window.state.isSubmitting = true;
+    renderApp();
+    
+    // Generate an clean, unambiguous 4 digit Code
+    const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // removed O, I, 1, 0
+    let code = '';
+    for (let i = 0; i < 4; i++) {
+        code += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+    }
+    
+    try {
+        const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', code);
+        const initialRoomObj = {
+            roomCode: code,
+            status: 'open',
+            settlementResults: {},
+            createdAt: new Date().toISOString()
+        };
+        await setDoc(roomRef, initialRoomObj);
+        
+        window.state.roomCode = code;
+        window.state.role = 'host';
+        playSynthSound('lock');
+        showToast(`Party Room ${code} successfully initiated!`, "success");
+        setupSubscriptions();
+    } catch (err) {
+        console.error("Room generation failed: ", err);
+        showToast("Could not generate cloud party session. Check local connection.", "error");
+    } finally {
+        window.state.isSubmitting = false;
+        renderApp();
+    }
+}
+
+// Adds a player entry to a specific generated Room Code
+async function handleJoinRoom(code, name) {
+    if (!window.state.authCompleted) {
+        showToast("Waiting on network authorization...", "error");
+        return;
+    }
+    if (!code || code.length !== 4) {
+        showToast("Enter a valid 4-character Room Code.", "error");
+        return;
+    }
+    if (!name || name.trim().length === 0) {
+        showToast("Please enter a custom nickname.", "error");
+        return;
+    }
+    
+    window.state.isSubmitting = true;
+    renderApp();
+    
+    const formattedCode = code.toUpperCase().trim();
+    const cleanName = name.trim();
+    
+    try {
+        // Verify if room code exists
+        const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', formattedCode);
+        const roomSnap = await getDoc(roomRef);
+        
+        if (!roomSnap.exists()) {
+            showToast(`Room Code ${formattedCode} not found. Try again.`, "error");
+            window.state.isSubmitting = false;
+            renderApp();
+            return;
+        }
+        
+        // Write player state document
+        const playerRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', window.state.playerId);
+        await setDoc(playerRef, {
+            playerId: window.state.playerId,
+            roomCode: formattedCode,
+            name: cleanName,
+            bets: {},
+            isLocked: false,
+            updatedAt: new Date().toISOString()
+        });
+        
+        window.state.roomCode = formattedCode;
+        window.state.nickname = cleanName;
+        window.state.role = 'player';
+        window.state.roomState = roomSnap.data();
+        
+        playSynthSound('lock');
+        showToast(`Joined ${formattedCode} successfully!`, "success");
+        setupSubscriptions();
+    } catch (e) {
+        console.error("Join action failed: ", e);
+        showToast("Error establishing connection to host cloud.", "error");
+    } finally {
+        window.state.isSubmitting = false;
+        renderApp();
+    }
+}
+
+// Subscribes to real-time sync of rooms & players
+let roomUnsub = null;
+let playersUnsub = null;
+
+function setupSubscriptions() {
+    if (roomUnsub) roomUnsub();
+    if (playersUnsub) playersUnsub();
+    
+    const code = window.state.roomCode;
+    if (!code) return;
+    
+    // Subscribe to Room State
+    const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', code);
+    roomUnsub = onSnapshot(roomRef, (snap) => {
+        if (snap.exists()) {
+            const data = snap.data();
+            window.state.roomState = data;
             
-            <div class="market-card">
-                <div class="market-title">Full Time Result<span class="market-subtitle">90分鐘+補時</span></div>
-                <div class="odds-grid-3">
-                    <button class="odds-button" id="btn_m1_1" onclick="toggleSelection('90分鐘+補時', '法國 勝', 2.35, 'btn_m1_1')">
-                        <span class="odds-label">法國</span><span class="odds-val">2.35</span>
-                    </button>
-                    <button class="odds-button" id="btn_m1_x" onclick="toggleSelection('90分鐘+補時', '和局', 3.25, 'btn_m1_x')">
-                        <span class="odds-label">和局</span><span class="odds-val">3.25</span>
-                    </button>
-                    <button class="odds-button" id="btn_m1_2" onclick="toggleSelection('90分鐘+補時', '西班牙 勝', 3.20, 'btn_m1_2')">
-                        <span class="odds-label">西班牙</span><span class="odds-val">3.20</span>
-                    </button>
-                </div>
-            </div>
+            // If the host changes status, make an alert sound for players
+            if (window.state.role === 'player') {
+                if (data.status === 'settled') {
+                    playSynthSound('settle');
+                } else if (data.status === 'locked') {
+                    playSynthSound('lock');
+                }
+            }
+            renderApp();
+        }
+    }, (err) => {
+        console.error("Subscription to Room State lost: ", err);
+    });
+    
+    // Subscribe to All Players in the App. We filter in JS memory to meet RULE 2 constraints.
+    const playersCol = collection(db, 'artifacts', appId, 'public', 'data', 'players');
+    playersUnsub = onSnapshot(playersCol, (snap) => {
+        const activeRoomPlayers = [];
+        snap.forEach(docSnap => {
+            const data = docSnap.data();
+            if (data.roomCode === code) {
+                activeRoomPlayers.push({
+                    id: docSnap.id,
+                    ...data
+                });
+            }
+        });
+        window.state.playersList = activeRoomPlayers;
+        
+        // Sync local stakes from Firestore if current player is updated from another tab
+        if (window.state.role === 'player') {
+            const selfObj = activeRoomPlayers.find(p => p.playerId === window.state.playerId);
+            if (selfObj) {
+                window.state.localBets = selfObj.bets || {};
+                window.state.lockedIn = selfObj.isLocked || false;
+            }
+        }
+        renderApp();
+    }, (err) => {
+        console.error("Subscription to Players List lost: ", err);
+    });
+}
 
-            <div class="market-card">
-                <div class="market-title">To Advance<span class="market-subtitle">晉級球隊</span></div>
-                <div class="odds-grid-2">
-                    <button class="odds-button" id="btn_m2_1" onclick="toggleSelection('advance', '法國 晉級', 1.61, 'btn_m2_1')">
-                        <span class="odds-label">法國</span><span class="odds-val">1.61</span>
-                    </button>
-                    <button class="odds-button" id="btn_m2_2" onclick="toggleSelection('advance', '西班牙 晉級', 2.30, 'btn_m2_2')">
-                        <span class="odds-label">西班牙</span><span class="odds-val">2.30</span>
-                    </button>
-                </div>
-            </div>
+// Client interactive stake increments
+async function updateLocalStake(marketId, option, delta) {
+    if (window.state.roomState.status !== 'open') {
+        showToast("Bets are locked. Host has closed pool changes.", "error");
+        return;
+    }
+    if (window.state.lockedIn) {
+        showToast("Unlock slip status or contact host to make revisions.", "error");
+        return;
+    }
+    
+    const key = `${marketId}_${option}`;
+    const currentStaked = window.state.localBets[key] || 0;
+    
+    // Calculate total currently staked
+    let totalOtherStakes = 0;
+    Object.entries(window.state.localBets).forEach(([k, val]) => {
+        if (k !== key) totalOtherStakes += val;
+    });
+    
+    const nextVal = Math.max(0, currentStaked + delta);
+    if (totalOtherStakes + nextVal > 10.00) {
+        showToast("Maximum budget allocation is $10.00 total.", "error");
+        return;
+    }
+    
+    window.state.localBets[key] = nextVal;
+    if (window.state.localBets[key] === 0) {
+        delete window.state.localBets[key];
+    }
+    
+    playSynthSound('tap');
+    
+    // Sync immediate status with cloud
+    try {
+        const playerRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', window.state.playerId);
+        await updateDoc(playerRef, {
+            bets: window.state.localBets,
+            updatedAt: new Date().toISOString()
+        });
+    } catch (e) {
+        console.error("Failed to sync bet stakes to host cloud: ", e);
+    }
+    renderApp();
+}
 
-            <div class="market-card">
-                <div class="market-title">Goals Over/Under<span class="market-subtitle">90分鐘+補時</span></div>
-                <div class="odds-grid-2">
-                    <button class="odds-button" id="btn_m3_o" onclick="toggleSelection('total_goals', 'Over 2.5 (大球)', 1.90, 'btn_m3_o')">
-                        <span class="odds-label">Over 2.5</span><span class="odds-val">1.90</span>
-                    </button>
-                    <button class="odds-button" id="btn_m3_u" onclick="toggleSelection('total_goals', 'Under 2.5 (小球)', 1.90, 'btn_m3_u')">
-                        <span class="odds-label">Under 2.5</span><span class="odds-val">1.90</span>
-                    </button>
-                </div>
-            </div>
+async function handleTogglePlayerLock() {
+    const isNextLocked = !window.state.lockedIn;
+    try {
+        const playerRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', window.state.playerId);
+        await updateDoc(playerRef, {
+            isLocked: isNextLocked,
+            updatedAt: new Date().toISOString()
+        });
+        window.state.lockedIn = isNextLocked;
+        playSynthSound('lock');
+        showToast(isNextLocked ? "Locked & Transmitted to Main Board!" : "Stakes Unlocked for Modifications.", "success");
+    } catch (e) {
+        showToast("Could not transmit lock action.", "error");
+    }
+    renderApp();
+}
 
-            <div class="market-card">
-                <div class="market-title">Correct Score<span class="market-subtitle">90分鐘+補時</span></div>
-                <div class="score-selector-wrapper">
-                    <div class="score-team-block">
-                        <div class="score-team-name">法國</div>
-                        <div class="counter-btn-group">
-                            <button class="btn-counter" onclick="adjustScore('home', -1)">-</button>
-                            <span class="score-number" id="scoreHomeDisplay">0</span>
-                            <button class="btn-counter" onclick="adjustScore('home', 1)">+</button>
+async function handleHostSetStatus(nextStatus) {
+    try {
+        const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', window.state.roomCode);
+        const updates = { status: nextStatus };
+        if (nextStatus === 'open') {
+            updates.settlementResults = {};
+        }
+        await updateDoc(roomRef, updates);
+        playSynthSound('lock');
+        showToast(`Game is now ${nextStatus.toUpperCase()}!`, "success");
+    } catch (e) {
+        showToast("Fail to write command update to server.", "error");
+    }
+}
+
+// Host settlement controls per Market Choice
+async function handleSettleMarket(marketId, winningOption) {
+    const nextResults = { ...window.state.roomState.settlementResults };
+    if (nextResults[marketId] === winningOption) {
+        delete nextResults[marketId]; // toggle action
+    } else {
+        nextResults[marketId] = winningOption;
+    }
+    
+    try {
+        const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', window.state.roomCode);
+        await updateDoc(roomRef, {
+            settlementResults: nextResults
+        });
+        playSynthSound('tap');
+    } catch (e) {
+        showToast("Unable to write outcome to cloud server.", "error");
+    }
+}
+
+// Calculation engine to find out who won what
+function calculateLeaderboard() {
+    const standings = [];
+    window.state.playersList.forEach(p => {
+        let totalInvested = 0;
+        let totalPayout = 0;
+        let winCount = 0;
+        
+        Object.entries(p.bets || {}).forEach(([key, stake]) => {
+            totalInvested += stake;
+            const [mId, mOpt] = key.split('_');
+            const targetMarket = MARKETS.find(m => m.id === mId);
+            if (targetMarket) {
+                const optIdx = targetMarket.options.indexOf(mOpt);
+                const isWinner = window.state.roomState.settlementResults[mId] === mOpt;
+                if (isWinner && optIdx !== -1) {
+                    totalPayout += stake * targetMarket.odds[optIdx];
+                    winCount++;
+                }
+            }
+        });
+        
+        const netProfit = totalPayout - totalInvested;
+        standings.push({
+            name: p.name,
+            totalInvested,
+            totalPayout,
+            netProfit,
+            winCount,
+            isLocked: p.isLocked
+        });
+    });
+    
+    return standings.sort((a, b) => b.netProfit - a.netProfit);
+}
+
+// Get aggregate pool levels per market option
+function getPoolMetrics() {
+    const pools = {}; // { marketId_option: { totalStake: 0, playerStakes: [] } }
+    
+    MARKETS.forEach(m => {
+        m.options.forEach(opt => {
+            pools[`${m.id}_${opt}`] = { totalStake: 0, backers: [] };
+        });
+    });
+    
+    window.state.playersList.forEach(p => {
+        Object.entries(p.bets || {}).forEach(([key, stake]) => {
+            if (pools[key] && stake > 0) {
+                pools[key].totalStake += stake;
+                pools[key].backers.push({ name: p.name, stake });
+            }
+        });
+    });
+    
+    return pools;
+}
+
+function renderApp() {
+    const root = document.getElementById('app-root');
+    if (!root) return;
+    
+    if (window.state.role === 'none') {
+        renderWelcomeScreen(root);
+    } else if (window.state.role === 'host') {
+        renderHostDashboard(root);
+    } else if (window.state.role === 'player') {
+        renderPlayerSlip(root);
+    }
+}
+
+function renderWelcomeScreen(root) {
+    root.innerHTML = `
+        <div class="flex-1 flex flex-col items-center justify-center p-6 max-w-lg mx-auto w-full">
+            <!-- Icon Hero -->
+            <div class="mb-8 text-center">
+                <div class="w-20 h-20 bg-blue-100 dark:bg-blue-900/40 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-inner">
+                    <span class="material-icons text-blue-600 dark:text-blue-400 text-4xl">sports_esports</span>
+                </div>
+                <h1 class="text-3xl font-bold tracking-tight mb-2">Betting Party Mode</h1>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Play real-time betting pools on a shared TV/Board screen with friends on their own phones!</p>
+            </div>
+            
+            <!-- Cards Action -->
+            <div class="w-full space-y-4 mb-8">
+                <!-- Host Panel -->
+                <button onclick="handleCreateRoom()" ${window.state.isSubmitting ? 'disabled' : ''} class="w-full text-left p-5 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm hover:border-blue-500 hover:shadow-md transition duration-200 flex items-center justify-between group">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-950 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                            <span class="material-icons text-2xl">desktop_windows</span>
+                        </div>
+                        <div>
+                            <span class="block font-semibold text-base">Host Shared Main Board</span>
+                            <span class="block text-xs text-gray-500 dark:text-gray-400">Display this on a laptop, TV, or main desk.</span>
                         </div>
                     </div>
-                    <div style="font-size: 24px; font-weight: bold; color:#555; margin-top:20px;">-</div>
-                    <div class="score-team-block">
-                        <div class="score-team-name">西班牙</div>
-                        <div class="counter-btn-group">
-                            <button class="btn-counter" onclick="adjustScore('away', -1)">-</button>
-                            <span class="score-number" id="scoreAwayDisplay">0</span>
-                            <button class="btn-counter" onclick="adjustScore('away', 1)">+</button>
+                    <span class="material-icons text-gray-400 group-hover:translate-x-1 transition duration-150">arrow_forward</span>
+                </button>
+                
+                <!-- Client Form Panel -->
+                <div class="p-5 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm space-y-4">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                            <span class="material-icons text-2xl">phone_iphone</span>
+                        </div>
+                        <div>
+                            <span class="block font-semibold text-base">Join on Your Phone</span>
+                            <span class="block text-xs text-gray-500 dark:text-gray-400">Enter a Room Code to play as a client slip.</span>
                         </div>
                     </div>
+                    
+                    <div class="space-y-3 pt-2">
+                        <div class="grid grid-cols-3 gap-2">
+                            <input id="joinCode" type="text" placeholder="CODE" maxlength="4" class="col-span-1 p-3 text-center uppercase tracking-wider font-bold rounded-xl border border-gray-300 dark:border-gray-700 bg-transparent text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <input id="joinName" type="text" placeholder="Your Nickname" class="col-span-2 p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-transparent text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                        <button onclick="handleJoinRoom(document.getElementById('joinCode').value, document.getElementById('joinName').value)" ${window.state.isSubmitting ? 'disabled' : ''} class="w-full bg-blue-600 text-white font-medium py-3 rounded-xl hover:bg-blue-700 active:scale-[0.98] transition shadow-sm text-sm flex items-center justify-center gap-2">
+                            <span class="material-icons text-sm">login</span> Join Party
+                        </button>
+                    </div>
                 </div>
-                <button class="cs-activate-btn" id="btnCorrectScoreActive" onclick="confirmCorrectScoreSelection()">
-                    添加正確比分 <span id="csDynamicText">0-0</span> (@8.50)
+            </div>
+            
+            <!-- Connection Debug / Status footer -->
+            <div class="text-center text-[11px] text-gray-400">
+                Authorized Cloud Client UID:<br>
+                <code class="font-mono block select-all break-all select-all mt-1">${window.state.playerId || 'Authenticating...'}</code>
+            </div>
+        </div>
+    `;
+}
+
+function renderHostDashboard(root) {
+    const code = window.state.roomCode;
+    const status = window.state.roomState.status;
+    const totalPlayers = window.state.playersList.length;
+    const poolMetrics = getPoolMetrics();
+    const settledResults = window.state.roomState.settlementResults;
+    
+    // Sum total stakes
+    let totalRoomStakes = 0;
+    window.state.playersList.forEach(p => {
+        Object.values(p.bets || {}).forEach(v => totalRoomStakes += v);
+    });
+    
+    root.innerHTML = `
+        <div class="flex-1 flex flex-col md:flex-row min-h-screen">
+            <!-- LEFT PANEL: Room Information & Connected Players List -->
+            <div class="w-full md:w-80 bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-900 p-6 flex flex-col shrink-0 gap-6">
+                <!-- Header Status -->
+                <div>
+                    <h2 class="text-xs font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-1">Live Multi-Device Host</h2>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-gray-500 text-xs">Tell players to join on their own phones!</span>
+                        <span class="flex h-2 w-2 relative">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                    </div>
+                    
+                    <div class="bg-blue-50 dark:bg-blue-950/40 p-4 rounded-2xl border border-blue-100 dark:border-blue-900/60 text-center">
+                        <span class="block text-xs text-blue-600 dark:text-blue-400 font-semibold mb-1">PARTY ROOM CODE</span>
+                        <span class="block text-5xl font-black tracking-widest text-blue-700 dark:text-blue-300 font-mono select-all">${code}</span>
+                    </div>
+                </div>
+                
+                <!-- Match Control Center -->
+                <div class="p-4 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 space-y-4">
+                    <span class="block text-xs font-bold tracking-wider text-gray-500 uppercase">Match Administration</span>
+                    
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium">Status Flag:</span>
+                        <span class="px-2 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                            status === 'open' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' :
+                            status === 'locked' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' :
+                            'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300'
+                        }">${status}</span>
+                    </div>
+                    
+                    <div class="space-y-2 pt-2">
+                        ${status === 'open' ? `
+                            <button onclick="handleHostSetStatus('locked')" class="w-full bg-amber-600 text-white font-medium py-2 rounded-xl hover:bg-amber-700 text-xs transition flex items-center justify-center gap-2 shadow-sm">
+                                <span class="material-icons text-base">lock</span> Lock All Betting Slips
+                            </button>
+                        ` : ''}
+                        
+                        ${status === 'locked' ? `
+                            <button onclick="handleHostSetStatus('settled')" class="w-full bg-indigo-600 text-white font-medium py-2 rounded-xl hover:bg-indigo-700 text-xs transition flex items-center justify-center gap-2 shadow-sm">
+                                <span class="material-icons text-base">emoji_events</span> Activate Settle Mode
+                            </button>
+                            <button onclick="handleHostSetStatus('open')" class="w-full bg-gray-300 text-gray-700 dark:bg-gray-800 dark:text-gray-200 font-medium py-2 rounded-xl hover:bg-gray-400 text-xs transition flex items-center justify-center gap-2 shadow-sm">
+                                <span class="material-icons text-base">lock_open</span> Reopen Betting Pools
+                            </button>
+                        ` : ''}
+                        
+                        ${status === 'settled' ? `
+                            <button onclick="handleHostSetStatus('open')" class="w-full bg-emerald-600 text-white font-medium py-2 rounded-xl hover:bg-emerald-700 text-xs transition flex items-center justify-center gap-2 shadow-sm">
+                                <span class="material-icons text-base">replay</span> Open New Pool Round
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+                
+                <!-- Connected Friends Panel -->
+                <div class="flex-1 overflow-y-auto min-h-[150px]">
+                    <div class="flex items-center justify-between mb-3 border-b pb-2">
+                        <span class="text-xs font-bold text-gray-400 uppercase">Party Players (${totalPlayers})</span>
+                        <span class="text-xs font-mono font-bold text-gray-500">$${totalRoomStakes.toFixed(2)} Staked</span>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        ${window.state.playersList.length === 0 ? `
+                            <div class="text-xs text-gray-400 italic text-center py-6">Waiting for friends to join...</div>
+                        ` : window.state.playersList.map(p => {
+                            let stakedAmt = 0;
+                            Object.values(p.bets || {}).forEach(v => stakedAmt += v);
+                            return `
+                                <div class="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-900 text-xs border border-gray-100 dark:border-gray-800">
+                                    <div class="flex items-center gap-2">
+                                        <span class="material-icons ${p.isLocked ? 'text-amber-500' : 'text-gray-400'} text-base">
+                                            ${p.isLocked ? 'lock' : 'pending'}
+                                        </span>
+                                        <span class="font-semibold">${p.name}</span>
+                                    </div>
+                                    <span class="font-mono text-gray-500 font-bold">$${stakedAmt.toFixed(2)} staked</span>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+                
+                <!-- Reset Board option -->
+                <button onclick="if(confirm('Reset all room results and player bets?')){ handleHostSetStatus('open'); }" class="w-full bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 text-xs font-semibold py-2 rounded-xl hover:bg-red-200 transition">
+                    Clean Settle & Reset Pool
                 </button>
             </div>
-
-            <div class="market-card">
-                <div class="market-title">Player to Score<span class="market-subtitle">包括加時</span></div>
-                <div class="player-row">
-                    <div class="player-info"><div class="player-shirt" style="background:#005a42;">10</div><span>Kylian Mbappé (法國)</span></div>
-                    <button class="btn-player-odds" id="btn_p_mbappe" onclick="toggleSelection('player_score', 'Kylian Mbappé 進球', 2.05, 'btn_p_mbappe')">2.05</button>
+            
+            <!-- RIGHT MAIN PANEL: Active Pool Statistics -->
+            <div class="flex-1 p-6 overflow-y-auto flex flex-col gap-6 max-w-5xl mx-auto w-full">
+                <!-- Status Alerts -->
+                <div class="flex items-center justify-between">
+                    <h1 class="text-2xl font-bold tracking-tight">Main Board Betting Pool Overview</h1>
+                    <button onclick="window.state.role = 'none'; setupSubscriptions();" class="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1">
+                        <span class="material-icons text-xs">logout</span> Exit Board
+                    </button>
                 </div>
-                <div class="player-row">
-                    <div class="player-info"><div class="player-shirt" style="background:#9a1a1a;">19</div><span>Lamine Yamal (西班牙)</span></div>
-                    <button class="btn-player-odds" id="btn_p_yamal" onclick="toggleSelection('player_score', 'Lamine Yamal 進球', 3.50, 'btn_p_yamal')">3.50</button>
-                </div>
-                <div class="player-row">
-                    <div class="player-info"><div class="player-shirt" style="background:#005a42;">11</div><span>Michael Olise (法國)</span></div>
-                    <button class="btn-player-odds" id="btn_p_olise" onclick="toggleSelection('player_score', 'Michael Olise 進球', 4.00, 'btn_p_olise')">4.00</button>
+                
+                ${status === 'settled' ? `
+                    <!-- LEADERBOARD PANEL -->
+                    <div class="p-6 rounded-3xl bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/60 shadow-sm animate-fade-in">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="material-icons text-indigo-600 text-3xl">emoji_events</span>
+                            <div>
+                                <h2 class="text-lg font-bold">Party Standings / Results Settle</h2>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Total payouts based on settled winning markers</p>
+                            </div>
+                        </div>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead>
+                                    <tr class="border-b border-indigo-200 dark:border-indigo-900 text-gray-500">
+                                        <th class="py-2">Rank</th>
+                                        <th class="py-2">Player Nickname</th>
+                                        <th class="py-2">Total Staked</th>
+                                        <th class="py-2">Correct Selections</th>
+                                        <th class="py-2 text-right">Final Payout</th>
+                                        <th class="py-2 text-right">Net Return</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${calculateLeaderboard().map((entry, idx) => `
+                                        <tr class="border-b border-indigo-100/50 dark:border-indigo-900/20">
+                                            <td class="py-3 font-bold text-sm">${idx + 1}</td>
+                                            <td class="py-3 font-semibold text-sm">${entry.name}</td>
+                                            <td class="py-3 font-mono">$${entry.totalInvested.toFixed(2)}</td>
+                                            <td class="py-3 font-bold">${entry.winCount} Markets Won</td>
+                                            <td class="py-3 font-mono text-right font-bold text-emerald-600 dark:text-emerald-400">$${entry.totalPayout.toFixed(2)}</td>
+                                            <td class="py-3 font-mono text-right font-bold ${entry.netProfit >= 0 ? 'text-green-600' : 'text-red-500'}">
+                                                ${entry.netProfit >= 0 ? '+' : ''}$${entry.netProfit.toFixed(2)}
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                ` : ''}
+                
+                <!-- MARKET CARDS BOARD -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    ${MARKETS.map(market => {
+                        const winner = settledResults[market.id];
+                        return `
+                            <div class="p-5 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col gap-4">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="font-bold text-sm tracking-tight text-gray-700 dark:text-gray-300">${market.label}</h3>
+                                    ${status === 'settled' ? `
+                                        <span class="text-[10px] uppercase font-bold tracking-wider text-gray-400">Winning Marker Settle</span>
+                                    ` : ''}
+                                </div>
+                                
+                                <div class="space-y-3">
+                                    ${market.options.map((opt, idx) => {
+                                        const key = `${market.id}_${opt}`;
+                                        const metric = poolMetrics[key] || { totalStake: 0, backers: [] };
+                                        
+                                        // Calculate dynamic width proportion
+                                        const totalStakesOnMarket = market.options.reduce((sum, o) => sum + (poolMetrics[`${market.id}_${o}`]?.totalStake || 0), 0);
+                                        const pct = totalStakesOnMarket > 0 ? (metric.totalStake / totalStakesOnMarket) * 100 : 0;
+                                        
+                                        const isSelectedWinner = winner === opt;
+                                        let borderClass = 'border-gray-200 dark:border-gray-800';
+                                        let bgClass = 'bg-gray-50 dark:bg-gray-950';
+                                        if (status === 'settled') {
+                                            if (isSelectedWinner) {
+                                                borderClass = 'border-green-500 dark:border-green-600 ring-2 ring-green-100 dark:ring-green-950';
+                                                bgClass = 'bg-green-50 dark:bg-green-950/40';
+                                            } else {
+                                                borderClass = 'border-gray-100 dark:border-gray-900 opacity-60';
+                                            }
+                                        }
+                                        
+                                        return `
+                                            <div onclick="${status === 'settled' ? `handleSettleMarket('${market.id}', '${opt}')` : ''}" class="p-3 rounded-xl border ${borderClass} ${bgClass} transition relative overflow-hidden ${status === 'settled' ? 'cursor-pointer hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20' : ''}">
+                                                <!-- Custom Progress bar showing pool proportion -->
+                                                <div class="absolute left-0 top-0 bottom-0 bg-blue-100/40 dark:bg-blue-900/15 transition-all duration-500" style="width: ${pct}%"></div>
+                                                
+                                                <div class="relative flex justify-between items-center text-xs">
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="font-bold text-gray-800 dark:text-gray-200">${opt}</span>
+                                                        <span class="text-[11px] font-mono text-gray-400">@ ${market.odds[idx].toFixed(2)}</span>
+                                                    </div>
+                                                    
+                                                    <div class="flex items-center gap-2 font-mono font-bold text-gray-600 dark:text-gray-400">
+                                                        <span>$${metric.totalStake.toFixed(2)} staked</span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Micro Backers representation -->
+                                                ${metric.backers.length > 0 ? `
+                                                    <div class="relative mt-1.5 flex flex-wrap gap-1">
+                                                        ${metric.backers.map(b => `
+                                                            <span class="text-[9px] px-1.5 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 font-medium">
+                                                                ${b.name}: $${b.stake}
+                                                            </span>
+                                                        `).join('')}
+                                                    </div>
+                                                ` : ''}
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
                 </div>
             </div>
-
         </div>
+    `;
+}
 
-        <div id="lockedSection" class="locked-screen hidden">
-            <div style="font-size:48px; margin-bottom:15px;">🔒</div>
-            <h2>投注已成功鎖定</h2>
-            <p style="color: var(--b365-text-muted); margin-top: 8px; font-size:12px;">你已使用整筆 $10 進行本次世界盃決賽組合投注，不可再修改。</p>
-            <div id="summaryOfBets" style="margin-top: 20px; text-align: left; background: #111; padding: 15px; border-radius: 4px; font-size:13px; line-height:1.5;"></div>
-        </div>
-    </div>
-
-    <div id="hostView" class="container tv-container hidden">
-        <div class="host-section">
-            <div class="host-title">⚙️ 2026世界盃決賽結果判定與一鍵派彩</div>
-            <div class="host-row">
-                <div class="host-input-group"><label>賽果最終比數 (如 2-1)</label><input type="text" id="res_score" class="host-input" placeholder="2-1"></div>
-                <div class="host-input-group">
-                    <label>最終晉級隊伍</label>
-                    <select id="res_advance" class="host-input">
-                        <option value="法國 晉級">法國</option>
-                        <option value="西班牙 晉級">西班牙</option>
-                    </select>
+function renderPlayerSlip(root) {
+    const code = window.state.roomCode;
+    const nickname = window.state.nickname;
+    const status = window.state.roomState.status;
+    const settledResults = window.state.roomState.settlementResults;
+    const locked = window.state.lockedIn;
+    
+    // Total currently staked
+    let totalStaked = 0;
+    Object.values(window.state.localBets).forEach(v => totalStaked += v);
+    const balance = 10.00 - totalStaked;
+    
+    // Header Slip Banner
+    root.innerHTML = `
+        <div class="flex-1 flex flex-col max-w-md mx-auto w-full bg-white dark:bg-gray-950 shadow-md">
+            <!-- Client Header -->
+            <div class="p-4 border-b border-gray-200 dark:border-gray-900 bg-gray-50 dark:bg-gray-900 shrink-0 flex items-center justify-between sticky top-0 z-10">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded-full font-mono font-bold">${code}</span>
+                    <span class="text-xs font-semibold max-w-[120px] truncate">${nickname}</span>
                 </div>
-                <div class="host-input-group">
-                    <label>有進球的球員 (包括加時)</label>
-                    <select id="res_scorer" class="host-input">
-                        <option value="none">無人進球</option>
-                        <option value="Kylian Mbappé 進球">Kylian Mbappé</option>
-                        <option value="Lamine Yamal 進球">Lamine Yamal</option>
-                        <option value="Michael Olise 進球">Michael Olise</option>
-                    </select>
-                </div>
+                
+                <button onclick="window.state.role = 'none'; setupSubscriptions();" class="text-xs text-gray-500 hover:text-gray-700">
+                    Exit Room
+                </button>
             </div>
-            <button class="btn-host" style="background:var(--b365-yellow); color:black; width:100%; padding:12px; font-size:14px;" onclick="settleMatch()">執行自動結算並更新大螢幕</button>
-            <button class="btn-host" style="background:#cc3333; margin-top:10px;" onclick="resetAllData()">清空並重設所有人資料</button>
-        </div>
-
-        <div class="tv-grid">
-            <div class="market-card">
-                <div class="market-title">🏆 世界盃派對實時資產排行榜</div>
-                <div style="padding:15px;">
-                    <table class="dashboard-table">
-                        <thead>
-                            <tr>
-                                <th>排名</th>
-                                <th>玩家名字</th>
-                                <th>狀態</th>
-                                <th>組合項數</th>
-                                <th>總賠率</th>
-                                <th>預計回報 / 最終資產</th>
-                            </tr>
-                        </thead>
-                        <tbody id="leaderboardBody"></tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="market-card">
-                <div class="market-title">🎯 玩家即時投注單動態</div>
-                <div id="liveBetsWall" style="padding:15px; font-size:12px; line-height:1.6;"></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="bet-slip-panel" id="betSlip" style="display:none;">
-        <div class="bet-slip-inner">
-            <div class="parlay-header">
-                <div style="display: flex; align-items: center; gap: 6px;">
-                    <span class="parlay-tag">Same Game Parlay</span>
-                    <span id="lblParlayCount" style="font-size:13px;">(1 組合)</span>
-                </div>
-                <span style="color:var(--b365-yellow); font-size:16px; font-weight:bold;">@ <span id="lblTotalOdds">0.00</span></span>
-            </div>
-
-            <div class="slip-items-scroller" id="slipScroller"></div>
-
-            <div class="friend-reminder" id="parlayReminderBlock" style="display:none;">
-                ⚠️ <b>重要提示：</b>你選擇了多個盤口組合。這是一張<b>串關過關單</b>，比賽結果必須**同時滿足以上所有條件**才能贏取獎金！只要其中一項不符合，本張 $10 籌碼即算落敗。
-            </div>
-
-            <div class="wager-summary-box">
+            
+            <!-- Dynamic Wallet & Lock Bar -->
+            <div class="p-4 bg-blue-50 dark:bg-blue-950/40 border-b border-blue-100 dark:border-blue-900/60 flex items-center justify-between shrink-0">
                 <div>
-                    <div style="font-size:13px; font-weight:bold; color:white;">本單固定注碼 (Wager)</div>
-                    <div style="font-size:11px; color:var(--b365-text-muted);">本模擬器每人限定一次過下注全部額度</div>
+                    <span class="block text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Remaining Balance</span>
+                    <span class="text-xl font-black font-mono text-blue-700 dark:text-blue-300">$${balance.toFixed(2)}</span>
+                    <span class="text-[10px] text-gray-500 block">Total Budget: $10.00 limit</span>
                 </div>
-                <div style="font-size:16px; font-weight:bold; color:var(--b365-yellow);">$10.00</div>
+                
+                <button onclick="handleTogglePlayerLock()" class="px-4 py-2.5 rounded-xl font-bold text-xs tracking-wider uppercase transition shadow-sm ${
+                    locked 
+                    ? 'bg-amber-100 border border-amber-300 text-amber-800 dark:bg-amber-950 dark:border-amber-900 dark:text-amber-200' 
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                } flex items-center gap-2">
+                    <span class="material-icons text-sm">${locked ? 'lock' : 'lock_open'}</span>
+                    ${locked ? 'Locked In' : 'Lock Slip'}
+                </button>
             </div>
-
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; font-size:13px; padding:0 4px;">
-                <span style="color:#aaa;">預計總回報 (To Return):</span>
-                <span style="color:var(--b365-bright-green); font-weight:bold; font-size:18px;">$ <span id="lblToReturn">0.00</span></span>
+            
+            <!-- Match Status banner -->
+            <div class="px-4 py-2 text-center text-xs font-semibold ${
+                status === 'open' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200' :
+                status === 'locked' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200' :
+                'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-200'
+            }">
+                ${status === 'open' ? '🟢 BETS ARE ACTIVE - Add your stakes below' :
+                  status === 'locked' ? '🔒 BETS ARE LOCKED - Waiting for Host Settlement' :
+                  '🏆 ROUND SETTLED - See payouts on main screen'}
             </div>
-
-            <button class="btn-final-place" onclick="submitFinalBetSlip()">Place Bet $10.00</button>
+            
+            <!-- Bet list section -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-4">
+                ${MARKETS.map(market => {
+                    const winner = settledResults[market.id];
+                    return `
+                        <div class="p-4 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 space-y-3">
+                            <h3 class="font-bold text-xs text-gray-500 uppercase tracking-wider">${market.label}</h3>
+                            
+                            <div class="space-y-2">
+                                ${market.options.map((opt, idx) => {
+                                    const key = `${market.id}_${opt}`;
+                                    const stake = window.state.localBets[key] || 0;
+                                    const isWinner = winner === opt;
+                                    
+                                    let itemBorder = 'border-gray-200 dark:border-gray-800';
+                                    let itemBg = 'bg-white dark:bg-gray-950';
+                                    if (status === 'settled') {
+                                        if (isWinner) {
+                                            itemBorder = 'border-green-500 dark:border-green-600';
+                                            itemBg = 'bg-green-50 dark:bg-green-950/40';
+                                        } else {
+                                            itemBorder = 'border-gray-100 dark:border-gray-900 opacity-60';
+                                        }
+                                    }
+                                    
+                                    return `
+                                        <div class="p-3 rounded-xl border ${itemBorder} ${itemBg} flex items-center justify-between gap-4">
+                                            <div class="flex-1">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="font-bold text-sm text-gray-800 dark:text-gray-200">${opt}</span>
+                                                    <span class="text-[11px] text-gray-400 font-mono">@ ${market.odds[idx].toFixed(2)}</span>
+                                                </div>
+                                                ${status === 'settled' && stake > 0 ? `
+                                                    <span class="text-[10px] font-bold block mt-0.5 ${isWinner ? 'text-green-600' : 'text-red-500'}">
+                                                        ${isWinner ? `Won: $${(stake * market.odds[idx]).toFixed(2)}` : 'Lost'}
+                                                    </span>
+                                                ` : ''}
+                                            </div>
+                                            
+                                            <!-- Stake selectors increment / decrement -->
+                                            ${status === 'open' && !locked ? `
+                                                <div class="flex items-center gap-1">
+                                                    <button onclick="updateLocalStake('${market.id}', '${opt}', -1)" class="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold text-sm flex items-center justify-center hover:bg-gray-200 transition">-</button>
+                                                    <span class="w-8 text-center font-bold text-xs font-mono">${stake > 0 ? `$${stake}` : '-'}</span>
+                                                    <button onclick="updateLocalStake('${market.id}', '${opt}', 1)" class="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold text-sm flex items-center justify-center hover:bg-gray-200 transition">+</button>
+                                                </div>
+                                            ` : `
+                                                <div class="font-mono font-bold text-sm">
+                                                    ${stake > 0 ? `$${stake.toFixed(2)}` : '-'}
+                                                </div>
+                                            `}
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+            
+            <!-- Connection Info Footer -->
+            <div class="p-4 border-t border-gray-200 dark:border-gray-900 bg-gray-50 dark:bg-gray-900 text-[10px] text-gray-400 text-center flex flex-col gap-1">
+                <span>Unique Device Auth Token:</span>
+                <code class="font-mono block select-all break-all">${window.state.playerId}</code>
+            </div>
         </div>
+    `;
+}
+
+// Ensure startup sequence is triggered correctly
+window.onload = function() {
+    initFirebase();
+};
+</script>
+
+<!-- Main Application Mounting Element -->
+<div id="app-root" class="flex-1 flex flex-col relative w-full h-full min-h-screen">
+    <!-- Initial Loader -->
+    <div class="flex-1 flex flex-col items-center justify-center p-6 text-center">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
+        <p class="text-sm text-gray-400">Verifying secure server channels & custom session tickets...</p>
     </div>
+</div>
 
-    <script>
-        let currentMode = 'player';
-        let currentPlayerName = '';
-        let currentSelections = {}; 
-        
-        let curCsHome = 0;
-        let curCsAway = 0;
+<!-- Non-alert Popup Notifications Shell -->
+<div id="toast-container" class="fixed bottom-4 right-4 flex flex-col gap-2 z-50 pointer-events-none"></div>
 
-        let systemData = {
-            players: {},
-            result: null
-        };
-
-        window.onload = function() {
-            loadFromStorage();
-            checkPlayerStatus();
-            renderHostDashboard();
-            setInterval(() => {
-                loadFromStorage();
-                renderHostDashboard();
-                checkPlayerStatus();
-            }, 2000);
-        };
-
-        function saveToStorage() { localStorage.setItem('b365_sgp_data', JSON.stringify(systemData)); }
-        function loadFromStorage() {
-            const d = localStorage.getItem('b365_sgp_data');
-            if(d) systemData = JSON.parse(d);
-        }
-
-        function resetAllData() {
-            if(confirm("確定要清空世界盃全體數據重設嗎？")) {
-                localStorage.removeItem('b365_sgp_data');
-                location.reload();
-            }
-        }
-
-        function toggleMode() {
-            if(currentMode === 'player') {
-                currentMode = 'host';
-                document.getElementById('playerView').classList.add('hidden');
-                document.getElementById('hostView').classList.remove('hidden');
-                document.getElementById('betSlip').style.display = 'none';
-                document.body.classList.remove('slip-active');
-                document.getElementById('btnToggleMode').innerText = '切換至 玩家投注手機端';
-            } else {
-                currentMode = 'player';
-                document.getElementById('hostView').classList.add('hidden');
-                document.getElementById('playerView').classList.remove('hidden');
-                document.getElementById('btnToggleMode').innerText = '切換至 Host 大螢幕面板';
-                checkPlayerStatus();
-            }
-        }
-
-        function loginPlayer() {
-            const name = document.getElementById('playerNameInput').value.trim();
-            if(!name) return alert("請輸入有效名字！");
-            currentPlayerName = name;
-            
-            if(!systemData.players[currentPlayerName]) {
-                systemData.players[currentPlayerName] = { selections: {}, status: 'open', totalOdds: 0, toReturn: 0, finalReturn: 0 };
-                saveToStorage();
-            }
-            document.getElementById('loginSection').classList.add('hidden');
-            document.getElementById('currentUserTag').innerText = "👤 " + currentPlayerName;
-            document.getElementById('currentUserTag').classList.remove('hidden');
-            document.getElementById('bettingSection').classList.remove('hidden');
-            checkPlayerStatus();
-        }
-
-        function toggleSelection(marketKey, choiceText, oddsVal, btnId) {
-            if(!currentPlayerName) return alert("請先輸入名字加入遊戲！");
-            
-            if(currentSelections[marketKey] && currentSelections[marketKey].choice === choiceText) {
-                delete currentSelections[marketKey];
-                document.getElementById(btnId).classList.remove('active');
-            } else {
-                clearMarketUiActive(marketKey);
-                currentSelections[marketKey] = { choice: choiceText, odds: oddsVal };
-                document.getElementById(btnId).classList.add('active');
-            }
-            renderBetSlip();
-        }
-
-        function clearMarketUiActive(marketKey) {
-            if(marketKey === '90分鐘+補時') {
-                ['btn_m1_1','btn_m1_x','btn_m1_2'].forEach(id => document.getElementById(id).classList.remove('active'));
-            } else if(marketKey === 'advance') {
-                ['btn_m2_1','btn_m2_2'].forEach(id => document.getElementById(id).classList.remove('active'));
-            } else if(marketKey === 'total_goals') {
-                ['btn_m3_o','btn_m3_u'].forEach(id => document.getElementById(id).classList.remove('active'));
-            } else if(marketKey === 'player_score') {
-                ['btn_p_mbappe','btn_p_yamal','btn_p_olise'].forEach(id => document.getElementById(id).classList.remove('active'));
-            }
-        }
-
-        function adjustScore(type, delta) {
-            if(type === 'home') {
-                curCsHome = Math.max(0, curCsHome + delta);
-                document.getElementById('scoreHomeDisplay').innerText = curCsHome;
-            } else {
-                curCsAway = Math.max(0, curCsAway + delta);
-                document.getElementById('scoreAwayDisplay').innerText = curCsAway;
-            }
-            document.getElementById('csDynamicText').innerText = `${curCsHome}-${curCsAway}`;
-        }
-
-        function confirmCorrectScoreSelection() {
-            if(!currentPlayerName) return alert("請先輸入名字加入遊戲！");
-            const scoreString = `${curCsHome}-${curCsAway}`;
-            const btn = document.getElementById('btnCorrectScoreActive');
-            
-            if(currentSelections['correct_score']) {
-                delete currentSelections['correct_score'];
-                btn.classList.remove('active');
-            } else {
-                currentSelections['correct_score'] = { choice: scoreString, odds: 8.50 }; 
-                btn.classList.add('active');
-            }
-            renderBetSlip();
-        }
-
-        function renderBetSlip() {
-            const slip = document.getElementById('betSlip');
-            const scroller = document.getElementById('slipScroller');
-            const keys = Object.keys(currentSelections);
-            
-            if(keys.length === 0) {
-                slip.style.display = 'none';
-                document.body.classList.remove('slip-active'); // 收起空白
-                return;
-            }
-            
-            slip.style.display = 'block';
-            document.body.classList.add('slip-active'); // 核心修復：動態撐開主頁面滾動高度，防止最下方的項目被擋住
-            
-            let finalMultiOdds = 1.0;
-            let html = '';
-            
-            keys.forEach(k => {
-                let s = currentSelections[k];
-                finalMultiOdds *= s.odds;
-                html += `
-                <div class="slip-item-row">
-                    <span>⚽ [${k.toUpperCase()}] <b>${s.choice}</b></span>
-                    <span style="color:var(--b365-yellow)">@${s.odds.toFixed(2)}</span>
-                </div>`;
-            });
-            
-            document.getElementById('parlayReminderBlock').style.display = keys.length >= 2 ? 'block' : 'none';
-            scroller.innerHTML = html;
-            document.getElementById('lblParlayCount').innerText = `(${keys.length} 個盤口組合單)`;
-            document.getElementById('lblTotalOdds').innerText = finalMultiOdds.toFixed(2);
-            
-            let toReturn = finalMultiOdds * 10;
-            document.getElementById('lblToReturn').innerText = toReturn.toFixed(2);
-        }
-
-        function submitFinalBetSlip() {
-            loadFromStorage();
-            const keys = Object.keys(currentSelections);
-            if(keys.length === 0) return alert("請至少選擇一個投注項目！");
-            
-            let finalMultiOdds = 1.0;
-            keys.forEach(k => finalMultiOdds *= currentSelections[k].odds);
-            
-            if(confirm(`確認使用整筆 $10 下注此過關單嗎？\n總共 ${keys.length} 個項目，總賠率為 @${finalMultiOdds.toFixed(2)}\n送出後將不可重選！`)) {
-                systemData.players[currentPlayerName].selections = JSON.parse(JSON.stringify(currentSelections));
-                systemData.players[currentPlayerName].status = 'locked';
-                systemData.players[currentPlayerName].totalOdds = finalMultiOdds;
-                systemData.players[currentPlayerName].toReturn = finalMultiOdds * 10;
-                systemData.players[currentPlayerName].finalReturn = 0; 
-                saveToStorage();
-                checkPlayerStatus();
-            }
-        }
-
-        function checkPlayerStatus() {
-            if(!currentPlayerName) return;
-            const p = systemData.players[currentPlayerName];
-            if(p && p.status === 'locked') {
-                document.getElementById('bettingSection').classList.add('hidden');
-                document.getElementById('betSlip').style.display = 'none';
-                document.body.classList.remove('slip-active');
-                document.getElementById('lockedSection').classList.remove('hidden');
-                
-                let html = `<p style="color:var(--b365-yellow); font-weight:bold; margin-bottom:8px;">🎯 你的過關投注單明細 (總賠率 @${p.totalOdds.toFixed(2)})：</p>`;
-                for(let k in p.selections) {
-                    html += `<div style="display:flex; justify-content:space-between; color:#bbb; padding:3px 0;">
-                                <span>• [${k}] ${p.selections[k].choice}</span>
-                                <span>@${p.selections[k].odds}</span>
-                             </div>`;
-                }
-                html += `<div style="margin-top:10px; border-top:1px solid #333; padding-top:8px; text-align:right;">
-                            下注：<b>$10.00</b> | 預計可得：<b style="color:var(--b365-bright-green)">$${p.toReturn.toFixed(2)}</b>
-                         </div>`;
-                document.getElementById('summaryOfBets').innerHTML = html;
-            }
-        }
-
-        function settleMatch() {
-            const score = document.getElementById('res_score').value.trim();
-            const advance = document.getElementById('res_advance').value;
-            const scorer = document.getElementById('res_scorer').value;
-            
-            if(!score) return alert("請輸入正確比分比數！");
-            
-            const parts = score.split('-');
-            const home = parseInt(parts[0]);
-            const away = parseInt(parts[1]);
-            const total = home + away;
-            
-            let win1X2 = (home > away) ? '法國 勝' : (home < away ? '西班牙 勝' : '和局');
-            let winOU = (total > 2.5) ? 'Over 2.5 (大球)' : 'Under 2.5 (小球)';
-            
-            systemData.result = { score, advance, scorer };
-            
-            for(let name in systemData.players) {
-                let p = systemData.players[name];
-                if(p.status !== 'locked') {
-                    p.finalReturn = 0;
-                    continue;
-                }
-                
-                let allConditionsMet = true;
-                let selectionCount = 0;
-                
-                for(let market in p.selections) {
-                    selectionCount++;
-                    let choice = p.selections[market].choice;
-                    
-                    if(market === '90分鐘+補時' && choice !== win1X2) allConditionsMet = false;
-                    if(market === 'advance' && choice !== advance) allConditionsMet = false;
-                    if(market === 'total_goals' && choice !== winOU) allConditionsMet = false;
-                    if(market === 'correct_score' && choice !== score) allConditionsMet = false;
-                    if(market === 'player_score' && choice !== scorer) allConditionsMet = false;
-                }
-                
-                if(selectionCount > 0 && allConditionsMet) {
-                    p.finalReturn = p.toReturn; 
-                } else {
-                    p.finalReturn = 0; 
-                }
-            }
-            saveToStorage();
-            renderHostDashboard();
-            alert("世界盃決賽大螢幕排行榜結算完成！");
-        }
-
-        function renderHostDashboard() {
-            const tbody = document.getElementById('leaderboardBody');
-            const wall = document.getElementById('liveBetsWall');
-            if(!tbody) return;
-            
-            let arr = [];
-            for(let n in systemData.players) arr.push({name: n, ...systemData.players[n]});
-            
-            arr.sort((a,b) => b.finalReturn - a.finalReturn);
-            
-            let tbodyHtml = '';
-            arr.forEach((p, idx) => {
-                let stateStr = p.status === 'locked' ? '🔒 已鎖定投注' : '⏳ 未送出單';
-                let displayReturn = systemData.result ? `$${p.finalReturn.toFixed(2)}` : `$${p.toReturn.toFixed(2)} (預計)`;
-                let rowStyle = p.finalReturn > 0 && systemData.result ? 'style="background:rgba(0,255,127,0.1);"' : '';
-                
-                tbodyHtml += `
-                <tr ${rowStyle}>
-                    <td><b>${idx+1}</b></td>
-                    <td style="color:var(--b365-yellow); font-weight:bold; font-size:15px;">${p.name}</td>
-                    <td style="font-size:12px;">${stateStr}</td>
-                    <td>${Object.keys(p.selections).length} 個盤口</td>
-                    <td>@${p.totalOdds.toFixed(2)}</td>
-                    <td style="font-weight:bold; color:var(--b365-bright-green); font-size:16px;">${displayReturn}</td>
-                </tr>`;
-            });
-            tbody.innerHTML = tbodyHtml || `<tr><td colspan="6" style="text-align:center; color:#555;">等待玩家加入...</td></tr>`;
-            
-            let wallHtml = '';
-            for(let name in systemData.players) {
-                let p = systemData.players[name];
-                wallHtml += `<div style="background:#222; padding:8px; border-radius:4px; margin-bottom:8px; border-left:3px solid var(--b365-bright-green);">`;
-                wallHtml += `<div style="font-weight:bold; color:white;">${name} <span style="color:var(--b365-yellow)">@${p.totalOdds.toFixed(2)}</span></div>`;
-                for(let m in p.selections) {
-                    wallHtml += `<div style="color:#aaa; padding-left:8px; font-size:11px;">• [${m}] ${p.selections[m].choice}</div>`;
-                }
-                wallHtml += `</div>`;
-            }
-            wall.innerHTML = wallHtml || `<div style="color:#555; text-align:center;">暫無落注組合...</div>`;
-        }
-    </script>
 </body>
 </html>
