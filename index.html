@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>bet365 - World Cup Simulator</title>
+    <title>bet365 - Same Game Parlay Simulator</title>
     <style>
         :root {
             --b365-dark-green: #123123;
@@ -15,219 +15,217 @@
             --b365-text-main: #ffffff;
             --b365-text-muted: #8e8e8e;
             --b365-border: #383838;
+            --b365-bright-green: #00ff7f;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        body { background-color: var(--b365-bg); color: var(--b365-text-main); font-size: 14px; padding-bottom: 120px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: var(--b365-bg); color: var(--b365-text-main); font-size: 14px; padding-bottom: 240px; } /* 預留大空間給底部投注單滾動 */
         
-        /* Header & Navigation */
         header { background-color: var(--b365-dark-green); padding: 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--b365-yellow); position: sticky; top: 0; z-index: 100; }
         .logo { font-weight: bold; font-size: 20px; color: var(--b365-yellow); font-style: italic; }
         .mode-switcher { background: rgba(255,255,255,0.1); border: none; color: white; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; }
-        .mode-switcher:hover { background: rgba(255,255,255,0.2); }
 
-        /* Match Info Header */
         .match-header { background-color: var(--b365-mid-green); padding: 15px; text-align: center; border-bottom: 1px solid var(--b365-border); }
-        .match-title { font-size: 12px; color: var(--b365-yellow); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+        .match-title { font-size: 11px; color: var(--b365-yellow); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
         .match-teams { font-size: 18px; font-weight: bold; display: flex; justify-content: center; align-items: center; gap: 15px; }
         .match-vs { font-size: 12px; color: var(--b365-text-muted); }
 
-        /* Container */
         .container { max-width: 600px; margin: 0 auto; padding: 10px; }
         .tv-container { max-width: 1000px; }
 
-        /* Market Cards (bet365 style) */
-        .market-card { background-color: var(--b365-card-bg); border-radius: 4px; margin-bottom: 10px; border: 1px solid var(--b365-border); overflow: hidden; }
-        .market-title { background-color: #333333; padding: 10px 12px; font-size: 13px; font-weight: bold; color: #ddd; border-bottom: 1px solid var(--b365-border); display: flex; justify-content: space-between; align-items: center; }
-        .market-subtitle { font-size: 10px; color: var(--b365-text-muted); margin-left: 5px; background: #222; padding: 2px 4px; border-radius: 2px; }
+        /* Market Cards */
+        .market-card { background-color: var(--b365-card-bg); border-radius: 4px; margin-bottom: 12px; border: 1px solid var(--b365-border); overflow: hidden; }
+        .market-title { background-color: #333333; padding: 10px 12px; font-size: 13px; font-weight: bold; color: #ddd; display: flex; justify-content: space-between; align-items: center; }
+        .market-subtitle { font-size: 10px; color: var(--b365-text-muted); background: #222; padding: 2px 4px; border-radius: 2px; }
         
-        /* Odds Grid */
+        /* Odds Grids */
         .odds-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background-color: var(--b365-border); }
         .odds-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background-color: var(--b365-border); }
-        .odds-button { background-color: var(--b365-card-bg); border: none; padding: 12px; color: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: background 0.2s; }
-        .odds-button:hover { background-color: #383838; }
-        .odds-button.active { background-color: rgba(255, 223, 27, 0.15); border: 1px solid var(--b365-yellow); }
-        .odds-label { font-size: 12px; color: var(--b365-text-muted); }
+        .odds-button { background-color: var(--b365-card-bg); border: none; padding: 14px; color: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+        .odds-button:hover { background-color: #333; }
+        .odds-button.active { background-color: rgba(255, 223, 27, 0.12); border: 1px solid var(--b365-yellow); }
+        .odds-label { font-size: 12px; color: #ccc; }
         .odds-val { font-size: 14px; font-weight: bold; color: var(--b365-yellow); }
 
-        /* Input Fields for Custom Bets */
-        .custom-bet-input { width: 100%; background: #1a1a1a; border: 1px solid var(--b365-border); padding: 10px; color: white; font-size: 14px; border-radius: 4px; margin-top: 5px; }
-        .custom-bet-input:focus { border-color: var(--b365-yellow); outline: none; }
-        .market-padding { padding: 12px; }
+        /* Correct Score Selector Component */
+        .score-selector-wrapper { display: flex; justify-content: space-around; align-items: center; padding: 15px; background: #222; }
+        .score-team-block { text-align: center; }
+        .score-team-name { font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #aaa; }
+        .counter-btn-group { display: flex; align-items: center; gap: 12px; }
+        .btn-counter { background: #444; border: none; color: white; width: 32px; height: 32px; font-size: 18px; font-weight: bold; border-radius: 4px; cursor: pointer; }
+        .btn-counter:hover { background: #555; }
+        .score-number { font-size: 22px; font-weight: bold; min-width: 25px; text-align: center; }
+        .cs-activate-btn { display: block; width: 100%; background: #333; border: none; color: var(--b365-yellow); padding: 10px; font-weight: bold; cursor: pointer; text-align: center; border-top: 1px solid var(--b365-border); }
+        .cs-activate-btn.active { background: rgba(255, 223, 27, 0.15); border: 1px solid var(--b365-yellow); }
 
-        /* Floating Bet Slip (Bottom Panel) */
-        .bet-slip-panel { position: fixed; bottom: 0; left: 0; right: 0; background-color: #222222; border-top: 3px solid var(--b365-yellow); box-shadow: 0 -5px 15px rgba(0,0,0,0.5); z-index: 99; display: none; }
-        .bet-slip-inner { max-width: 600px; margin: 0 auto; padding: 15px; }
-        .parlay-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; border-bottom: 1px solid var(--b365-border); padding-bottom: 8px; margin-bottom: 10px; }
-        .parlay-tag { background: var(--b365-mid-green); font-size: 11px; padding: 2px 6px; border-radius: 2px; text-transform: uppercase; }
-        .slip-item { font-size: 13px; color: #ccc; margin-bottom: 6px; display: flex; justify-content: space-between; }
-        .slip-item-remove { color: #ff4d4d; cursor: pointer; font-weight: bold; }
-        .wager-section { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; background: #2a2a2a; padding: 10px; border-radius: 4px; }
-        .wager-input-wrapper { display: flex; align-items: center; gap: 5px; }
-        .wager-input { width: 70px; padding: 6px; background: #111; border: 1px solid var(--b365-border); color: var(--b365-yellow); font-weight: bold; text-align: center; border-radius: 4px; font-size: 14px; }
-        .btn-place-bet { background-color: var(--b365-yellow); color: #000; border: none; font-weight: bold; padding: 12px; width: 100%; border-radius: 4px; margin-top: 10px; cursor: pointer; font-size: 15px; }
-        .btn-place-bet:hover { background-color: #e2c512; }
+        /* Player to Score Grid (Row list) */
+        .player-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid var(--b365-border); background: #232323; }
+        .player-info { display: flex; align-items: center; gap: 8px; }
+        .player-shirt { width: 20px; height: 20px; background: #005a42; border-radius: 50%; font-size: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .btn-player-odds { background: #333; border: 1px solid #444; color: var(--b365-yellow); padding: 6px 15px; font-weight: bold; border-radius: 4px; cursor: pointer; min-width: 65px; text-align: center; }
+        .btn-player-odds.active { background: rgba(255, 223, 27, 0.2); border-color: var(--b365-yellow); }
 
-        /* Host View Styling */
+        /* Optimized Floating Bet Slip (Bottom Panel) */
+        .bet-slip-panel { position: fixed; bottom: 0; left: 0; right: 0; background-color: #1e1e1e; border-top: 3px solid var(--b365-bright-green); box-shadow: 0 -8px 25px rgba(0,0,0,0.6); z-index: 999; }
+        .bet-slip-inner { max-width: 600px; margin: 0 auto; padding: 12px 15px; }
+        .parlay-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; margin-bottom: 8px; }
+        .parlay-tag { background: var(--b365-bright-green); color: black; font-size: 10px; padding: 2px 5px; border-radius: 2px; font-weight: bold; text-transform: uppercase; }
+        
+        /* Scroller box inside slip so it never blocks the whole screen */
+        .slip-items-scroller { max-height: 100px; overflow-y: auto; background: #141414; padding: 6px; border-radius: 4px; margin-bottom: 8px; border: 1px solid #2a2a2a; }
+        .slip-item-row { font-size: 12px; color: #ccc; padding: 4px 0; border-bottom: 1px solid #222; display: flex; justify-content: space-between; }
+        
+        /* Friend friendly reminder block */
+        .friend-reminder { background: rgba(255, 223, 27, 0.08); border-left: 3px solid var(--b365-yellow); padding: 8px; font-size: 11px; color: #dfdfdf; margin-bottom: 8px; border-radius: 0 4px 4px 0; line-height: 1.4; }
+
+        .wager-summary-box { display: flex; justify-content: space-between; align-items: center; background: #252525; padding: 10px; border-radius: 4px; margin-bottom: 8px; }
+        .btn-final-place { background-color: var(--b365-bright-green); color: #000; border: none; font-weight: bold; padding: 14px; width: 100%; border-radius: 4px; cursor: pointer; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-final-place:hover { background-color: #00e672; }
+
+        /* Host View Dashboard */
         .host-section { background: var(--b365-card-bg); padding: 15px; border-radius: 6px; border: 1px solid var(--b365-border); margin-bottom: 20px; }
-        .host-title { font-size: 16px; font-weight: bold; color: var(--b365-yellow); margin-bottom: 12px; border-bottom: 1px solid var(--b365-border); padding-bottom: 5px; }
+        .host-title { font-size: 15px; font-weight: bold; color: var(--b365-yellow); margin-bottom: 10px; }
         .host-row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
         .host-input-group { flex: 1; min-width: 120px; display: flex; flex-direction: column; gap: 4px; }
-        .host-input-group label { font-size: 11px; color: var(--b365-text-muted); }
         .host-input { background: #1a1a1a; border: 1px solid var(--b365-border); padding: 6px; color: white; border-radius: 4px; }
         .btn-host { background: var(--b365-light-green); color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .btn-host:hover { background: var(--b365-mid-green); }
-
-        /* Dashboard / TV Wall Leaderboard */
+        
         .tv-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
-        @media(max-width: 768px) { .tv-grid { grid-template-columns: 1fr; } }
-        .dashboard-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .dashboard-table { width: 100%; border-collapse: collapse; }
         .dashboard-table th, .dashboard-table td { padding: 10px; text-align: left; border-bottom: 1px solid var(--b365-border); }
-        .dashboard-table th { background-color: #222; color: var(--b365-text-muted); font-size: 12px; }
-        .rank-badge { display: inline-block; width: 22px; height: 22px; background: #444; border-radius: 50%; text-align: center; line-height: 22px; font-weight: bold; font-size: 11px; }
-        .rank-1 { background: var(--b365-yellow); color: black; }
-        .rank-2 { background: #cccccc; color: black; }
-        .rank-3 { background: #cd7f32; color: white; }
+        .dashboard-table th { background-color: #222; color: var(--b365-text-muted); font-size: 11px; }
 
-        /* Utility */
         .hidden { display: none !important; }
-        .locked-screen { text-align: center; padding: 40px 20px; background: var(--b365-card-bg); border-radius: 6px; border: 1px solid var(--b365-border); margin-top: 20px; }
-        .lock-icon { font-size: 48px; color: var(--b365-yellow); margin-bottom: 15px; }
+        .locked-screen { text-align: center; padding: 50px 20px; background: var(--b365-card-bg); border-radius: 6px; border: 1px solid var(--b365-border); margin-top: 20px; }
         .user-tag { background: #333; padding: 4px 8px; border-radius: 12px; font-size: 12px; }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo">bet365</div>
+        <div class="logo">bet365 <span style="font-size:11px; vertical-align:middle; background:#ff4d4d; color:white; padding:1px 4px; border-radius:3px;font-style:normal;">SGP</span></div>
         <div style="display: flex; align-items: center; gap: 10px;">
             <span id="currentUserTag" class="user-tag hidden"></span>
-            <button class="mode-switcher" id="btnToggleMode" onclick="toggleMode()">切換至 Host 模式</button>
+            <button class="mode-switcher" id="btnToggleMode" onclick="toggleMode()">切換至 Host 大螢幕面板</button>
         </div>
     </header>
 
     <div class="match-header">
-        <div class="match-title">World Cup 2026 - 總決賽模擬下注</div>
+        <div class="match-title">EUROPEAN CHAMPIONSHIP - SAME GAME PARLAY</div>
         <div class="match-teams">
-            <span>法國 法國</span>
+            <span>法國 France</span>
             <span class="match-vs">v</span>
-            <span>西班牙 西班牙</span>
+            <span>西班牙 Spain</span>
         </div>
     </div>
 
-    <!-- ==================== PLAYER VIEW ==================== -->
     <div id="playerView" class="container">
-        <!-- Name Login Screen -->
-        <div id="loginSection" class="market-card market-padding">
-            <h3 style="margin-bottom: 10px;">請輸入你的名字加入遊戲</h3>
+        <div id="loginSection" class="market-card" style="padding: 15px;">
+            <h3 style="margin-bottom: 10px; font-size:14px;">請輸入你的名字以獲取虛擬 $10：</h3>
             <div style="display: flex; gap: 10px;">
-                <input type="text" id="playerNameInput" class="custom-bet-input" style="margin-top:0;" placeholder="英文名或中文名...">
-                <button class="btn-host" onclick="loginPlayer()">登入</button>
+                <input type="text" id="playerNameInput" class="host-input" style="flex:1;" placeholder="輸入玩家名字...">
+                <button class="btn-host" onclick="loginPlayer()">進入投注盤口</button>
             </div>
         </div>
 
-        <!-- Bet Slip Screen (Hidden until login) -->
         <div id="bettingSection" class="hidden">
-            <!-- Market 1: 1X2 -->
+            
             <div class="market-card">
-                <div class="market-title">Money Line 3-way<span class="market-subtitle">90' + Stoppage Time</span></div>
+                <div class="market-title">Full Time Result<span class="market-subtitle">90<span>mins</span></span></div>
                 <div class="odds-grid-3">
-                    <button class="odds-button" id="o_1x2_1" onclick="selectOdds('90mins', '主勝 (法國)', 'odds_1x2_1')">
-                        <span class="odds-label">法國</span><span class="odds-val" id="lbl_1x2_1">2.35</span>
+                    <button class="odds-button" id="btn_m1_1" onclick="toggleSelection('90mins', '法國 勝', 2.35, 'btn_m1_1')">
+                        <span class="odds-label">法國</span><span class="odds-val">2.35</span>
                     </button>
-                    <button class="odds-button" id="o_1x2_x" onclick="selectOdds('90mins', '和局', 'odds_1x2_x')">
-                        <span class="odds-label">和局</span><span class="odds-val" id="lbl_1x2_x">3.25</span>
+                    <button class="odds-button" id="btn_m1_x" onclick="toggleSelection('90mins', '和局', 3.25, 'btn_m1_x')">
+                        <span class="odds-label">和局</span><span class="odds-val">3.25</span>
                     </button>
-                    <button class="odds-button" id="o_1x2_2" onclick="selectOdds('90mins', '客勝 (西班牙)', 'odds_1x2_2')">
-                        <span class="odds-label">西班牙</span><span class="odds-val" id="lbl_1x2_2">3.20</span>
+                    <button class="odds-button" id="btn_m1_2" onclick="toggleSelection('90mins', '西班牙 勝', 3.20, 'btn_m1_2')">
+                        <span class="odds-label">西班牙</span><span class="odds-val">3.20</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Market 2: To Advance -->
             <div class="market-card">
-                <div class="market-title">To Advance<span class="market-subtitle">晉級隊伍</span></div>
+                <div class="market-title">To Advance<span class="market-subtitle">晉級球隊</span></div>
                 <div class="odds-grid-2">
-                    <button class="odds-button" id="o_adv_1" onclick="selectOdds('advance', '法國 晉級', 'odds_adv_1')">
-                        <span class="odds-label">法國</span><span class="odds-val" id="lbl_adv_1">1.61</span>
+                    <button class="odds-button" id="btn_m2_1" onclick="toggleSelection('advance', '法國 晉級', 1.61, 'btn_m2_1')">
+                        <span class="odds-label">法國</span><span class="odds-val">1.61</span>
                     </button>
-                    <button class="odds-button" id="o_adv_2" onclick="selectOdds('advance', '西班牙 晉級', 'odds_adv_2')">
-                        <span class="odds-label">西班牙</span><span class="odds-val" id="lbl_adv_2">2.30</span>
+                    <button class="odds-button" id="btn_m2_2" onclick="toggleSelection('advance', '西班牙 晉級', 2.30, 'btn_m2_2')">
+                        <span class="odds-label">西班牙</span><span class="odds-val">2.30</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Market 3: O/U 2.5 -->
             <div class="market-card">
                 <div class="market-title">Goals Over/Under<span class="market-subtitle">總入球大小盤</span></div>
                 <div class="odds-grid-2">
-                    <button class="odds-button" id="o_ou_over" onclick="selectOdds('total_score', 'Over 2.5 (大球)', 'odds_ou_over')">
-                        <span class="odds-label">Over 2.5</span><span class="odds-val" id="lbl_ou_over">1.90</span>
+                    <button class="odds-button" id="btn_m3_o" onclick="toggleSelection('total_goals', 'Over 2.5 (大球)', 1.90, 'btn_m3_o')">
+                        <span class="odds-label">Over 2.5</span><span class="odds-val">1.90</span>
                     </button>
-                    <button class="odds-button" id="o_ou_under" onclick="selectOdds('total_score', 'Under 2.5 (小球)', 'odds_ou_under')">
-                        <span class="odds-label">Under 2.5</span><span class="odds-val" id="lbl_ou_under">1.90</span>
+                    <button class="odds-button" id="btn_m3_u" onclick="toggleSelection('total_goals', 'Under 2.5 (小球)', 1.90, 'btn_m3_u')">
+                        <span class="odds-label">Under 2.5</span><span class="odds-val">1.90</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Market 4: Correct Score -->
             <div class="market-card">
-                <div class="market-title">Correct Score<span class="market-subtitle" id="lbl_flat_cs">固定賠率: 8.50</span></div>
-                <div class="market-padding">
-                    <label class="odds-label">輸入正確比分 (例如: 2-1 或 0-2):</label>
-                    <input type="text" id="input_cs" class="custom-bet-input" placeholder="未輸入" oninput="updateCustomBet('correct_score', this.value)">
+                <div class="market-title">Correct Score<span class="market-subtitle">90' + Stoppage Time</span></div>
+                <div class="score-selector-wrapper">
+                    <div class="score-team-block">
+                        <div class="score-team-name">法國</div>
+                        <div class="counter-btn-group">
+                            <button class="btn-counter" onclick="adjustScore('home', -1)">-</button>
+                            <span class="score-number" id="scoreHomeDisplay">0</span>
+                            <button class="btn-counter" onclick="adjustScore('home', 1)">+</button>
+                        </div>
+                    </div>
+                    <div style="font-size: 24px; font-weight: bold; color:#555; margin-top:20px;">-</div>
+                    <div class="score-team-block">
+                        <div class="score-team-name">西班牙</div>
+                        <div class="counter-btn-group">
+                            <button class="btn-counter" onclick="adjustScore('away', -1)">-</button>
+                            <span class="score-number" id="scoreAwayDisplay">0</span>
+                            <button class="btn-counter" onclick="adjustScore('away', 1)">+</button>
+                        </div>
+                    </div>
+                </div>
+                <button class="cs-activate-btn" id="btnCorrectScoreActive" onclick="confirmCorrectScoreSelection()">
+                    添加正確比分 <span id="csDynamicText">0-0</span> (@8.50)
+                </button>
+            </div>
+
+            <div class="market-card">
+                <div class="market-title">Player to Score<span class="market-subtitle">任何時間進球者</span></div>
+                <div class="player-row">
+                    <div class="player-info"><div class="player-shirt" style="background:#005a42;">10</div><span>Kylian Mbappé (法國)</span></div>
+                    <button class="btn-player-odds" id="btn_p_mbappe" onclick="toggleSelection('player_score', 'Kylian Mbappé 進球', 2.05, 'btn_p_mbappe')">2.05</button>
+                </div>
+                <div class="player-row">
+                    <div class="player-info"><div class="player-shirt" style="background:#9a1a1a;">19</div><span>Lamine Yamal (西班牙)</span></div>
+                    <button class="btn-player-odds" id="btn_p_yamal" onclick="toggleSelection('player_score', 'Lamine Yamal 進球', 3.50, 'btn_p_yamal')">3.50</button>
+                </div>
+                <div class="player-row">
+                    <div class="player-info"><div class="player-shirt" style="background:#005a42;">11</div><span>Michael Olise (法國)</span></div>
+                    <button class="btn-player-odds" id="btn_p_olise" onclick="toggleSelection('player_score', 'Michael Olise 進球', 4.00, 'btn_p_olise')">4.00</button>
                 </div>
             </div>
 
-            <!-- Market 5: First Goalscorer -->
-            <div class="market-card">
-                <div class="market-title">First Goalscorer<span class="market-subtitle" id="lbl_flat_fg">固定賠率: 6.00</span></div>
-                <div class="market-padding">
-                    <label class="odds-label">輸入首名入球球員名稱 (例如: Mbappe):</label>
-                    <input type="text" id="input_fg" class="custom-bet-input" placeholder="未輸入" oninput="updateCustomBet('first_goal', this.value)">
-                </div>
-            </div>
         </div>
 
-        <!-- Locked Screen (After submission) -->
         <div id="lockedSection" class="locked-screen hidden">
-            <div class="lock-icon">🔒</div>
-            <h2>投注已鎖定完成</h2>
-            <p style="color: var(--b365-text-muted); margin-top: 10px;">每人只有一次下注機會。請留意電視/大螢幕動態，祝你好運！</p>
-            <div id="summaryOfBets" style="margin-top: 20px; text-align: left; background: #111; padding: 15px; border-radius: 4px;"></div>
+            <div style="font-size:48px; margin-bottom:15px;">🔒</div>
+            <h2>投注已成功鎖定</h2>
+            <p style="color: var(--b365-text-muted); margin-top: 8px; font-size:12px;">你已使用整筆 $10 進行本次組合投注，不可再修改。</p>
+            <div id="summaryOfBets" style="margin-top: 20px; text-align: left; background: #111; padding: 15px; border-radius: 4px; font-size:13px; line-height:1.5;"></div>
         </div>
     </div>
 
-
-    <!-- ==================== HOST & TV VIEW ==================== -->
     <div id="hostView" class="container tv-container hidden">
-        <!-- Host Controls Panel -->
         <div class="host-section">
-            <div class="host-title">⚙️ Host 賠率設定面板 (參考 bet365 前一天數據)</div>
+            <div class="host-title">⚙️ 賽後結果判定與一鍵派彩</div>
             <div class="host-row">
-                <div class="host-input-group"><label>1X2: 主勝</label><input type="number" step="0.01" id="h_1x2_1" class="host-input" value="2.35"></div>
-                <div class="host-input-group"><label>1X2: 和局</label><input type="number" step="0.01" id="h_1x2_x" class="host-input" value="3.25"></div>
-                <div class="host-input-group"><label>1X2: 客勝</label><input type="number" step="0.01" id="h_1x2_2" class="host-input" value="3.20"></div>
-            </div>
-            <div class="host-row">
-                <div class="host-input-group"><label>晉級: 主隊</label><input type="number" step="0.01" id="h_adv_1" class="host-input" value="1.61"></div>
-                <div class="host-input-group"><label>晉級: 客隊</label><input type="number" step="0.01" id="h_adv_2" class="host-input" value="2.30"></div>
-                <div class="host-input-group"><label>大小: Over 2.5</label><input type="number" step="0.01" id="h_ou_o" class="host-input" value="1.90"></div>
-                <div class="host-input-group"><label>大小: Under 2.5</label><input type="number" step="0.01" id="h_ou_u" class="host-input" value="1.90"></div>
-            </div>
-            <div class="host-row">
-                <div class="host-input-group"><label>正確比分 (統一倍率)</label><input type="number" step="0.1" id="h_flat_cs" class="host-input" value="8.50"></div>
-                <div class="host-input-group"><label>首名入球 (統一倍率)</label><input type="number" step="0.1" id="h_flat_fg" class="host-input" value="6.00"></div>
-            </div>
-            <button class="btn-host" onclick="saveOddsFromHost()">更新全體賠率</button>
-            <button class="btn-host" style="background:#cc3333;" onclick="resetAllData()">重設所有人資料(清空)</button>
-        </div>
-
-        <!-- Host Settlement Panel -->
-        <div class="host-section" style="border-color: var(--b365-yellow);">
-            <div class="host-title" style="color: var(--b365-yellow);">🏆 賽後結果輸入與一鍵派彩</div>
-            <div class="host-row">
-                <div class="host-input-group"><label>最終比數 (格式如 2-1)</label><input type="text" id="res_score" class="host-input" placeholder="2-1"></div>
+                <div class="host-input-group"><label>賽果最終比數 (如 2-1)</label><input type="text" id="res_score" class="host-input" placeholder="2-1"></div>
                 <div class="host-input-group">
                     <label>最終晉級隊伍</label>
                     <select id="res_advance" class="host-input">
@@ -235,100 +233,97 @@
                         <option value="西班牙 晉級">西班牙</option>
                     </select>
                 </div>
-                <div class="host-input-group"><label>首名入球球員名稱</label><input type="text" id="res_scorer" class="host-input" placeholder="Mbappe"></div>
+                <div class="host-input-group">
+                    <label>有進球的熱門球員</label>
+                    <select id="res_scorer" class="host-input">
+                        <option value="none">無人進球</option>
+                        <option value="Kylian Mbappé 進球">Kylian Mbappé</option>
+                        <option value="Lamine Yamal 進球">Lamine Yamal</option>
+                        <option value="Michael Olise 進球">Michael Olise</option>
+                    </select>
+                </div>
             </div>
-            <button class="btn-place-bet" style="margin-top:5px;" onclick="settleMatch()">一鍵自動結算並公佈排行榜</button>
+            <button class="btn-host" style="background:var(--b365-yellow); color:black; width:100%; padding:12px; font-size:14px;" onclick="settleMatch()">執行自動結算並更新大螢幕</button>
+            <button class="btn-host" style="background:#cc3333; margin-top:10px;" onclick="resetAllData()">清空並重設所有人資料</button>
         </div>
 
-        <!-- TV BIG WALL SCREEN GRID -->
         <div class="tv-grid">
-            <!-- Left: Leaderboard / Live wall -->
             <div class="market-card">
-                <div class="market-title">📊 實時派對排行榜 / 玩家資產牆</div>
-                <div class="market-padding">
+                <div class="market-title">🏆 派對實時資產排行榜 (電視投影牆)</div>
+                <div style="padding:15px;">
                     <table class="dashboard-table">
                         <thead>
                             <tr>
                                 <th>排名</th>
-                                <th>玩家</th>
-                                <th>投注狀態</th>
-                                <th>初始資金</th>
-                                <th>最終資產 (回報)</th>
+                                <th>玩家名字</th>
+                                <th>狀態</th>
+                                <th>下注組合項數</th>
+                                <th>總賠率</th>
+                                <th>預計回報 / 最終資產</th>
                             </tr>
                         </thead>
-                        <tbody id="leaderboardBody">
-                            <!-- Dynamic Injection -->
-                        </tbody>
+                        <tbody id="leaderboardBody"></tbody>
                     </table>
                 </div>
             </div>
-
-            <!-- Right: Live Bets overview -->
             <div class="market-card">
-                <div class="market-title">🎯 全員投注組合動態牆</div>
-                <div id="liveBetsWall" class="market-padding" style="font-size:12px; line-height: 1.6;">
-                    <!-- Dynamic Injection -->
-                </div>
+                <div class="market-title">🎯 玩家即時投注單動態</div>
+                <div id="liveBetsWall" style="padding:15px; font-size:12px; line-height:1.6;"></div>
             </div>
         </div>
     </div>
 
-    <!-- ==================== FLOATING BET SLIP ==================== -->
-    <div class="bet-slip-panel" id="betSlip">
+    <div class="bet-slip-panel" id="betSlip" style="display:none;">
         <div class="bet-slip-inner">
             <div class="parlay-header">
-                <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 6px;">
                     <span class="parlay-tag">Same Game Parlay</span>
-                    <span>組合投注組合單</span>
+                    <span id="lblParlayCount" style="font-size:13px;">(1 組合)</span>
                 </div>
-                <span id="slipBudgetCount" style="color:var(--b365-yellow);">剩餘可用資金: $10.00</span>
-            </div>
-            
-            <div id="slipItemsContainer">
-                <!-- Selected bets will show up here -->
+                <span style="color:var(--b365-yellow); font-size:16px; font-weight:bold;">@ <span id="lblTotalOdds">0.00</span></span>
             </div>
 
-            <div class="wager-section">
+            <div class="slip-items-scroller" id="slipScroller"></div>
+
+            <div class="friend-reminder" id="parlayReminderBlock" style="display:none;">
+                ⚠️ <b>新手提示：</b>你選擇了多個盤口組合。這是一張<b>串關過關單</b>，比賽結果必須**同時滿足以上所有條件**才能贏取獎金！只要其中一項不符合，這 $10 籌碼即算落敗。
+            </div>
+
+            <div class="wager-summary-box">
                 <div>
-                    <div style="font-weight:bold;">總投注注碼分配</div>
-                    <div style="font-size:11px; color: var(--b365-text-muted);">必須剛好分配完 $10 即可送出</div>
+                    <div style="font-size:13px; font-weight:bold; color:white;">本單固定注碼 (Wager)</div>
+                    <div style="font-size:11px; color:var(--b365-text-muted);">每人整筆限制注額金額</div>
                 </div>
-                <div class="wager-input-wrapper">
-                    <span>$</span>
-                    <input type="number" id="totalWagerShow" class="wager-input" value="0" readonly>
-                </div>
+                <div style="font-size:16px; font-weight:bold; color:var(--b365-yellow);">$10.00</div>
             </div>
 
-            <button class="btn-place-bet" id="btnSubmitBetSlip" onclick="submitFinalBet()">Place Bet $10.00</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; font-size:13px; padding:0 4px;">
+                <span style="color:#aaa;">預計總回報率 (To Return):</span>
+                <span style="color:var(--b365-bright-green); font-weight:bold; font-size:18px;">$ <span id="lblToReturn">0.00</span></span>
+            </div>
+
+            <button class="btn-final-place" onclick="submitFinalBetSlip()">Place Bet $10.00</button>
         </div>
     </div>
 
     <script>
-        // --- 核心系統資料結構 ---
-        let currentMode = 'player'; 
+        let currentMode = 'player';
         let currentPlayerName = '';
+        let currentSelections = {}; // 保存當前玩家選中的盤口明細
+        
+        // Correct Score 獨立計數器狀態
+        let curCsHome = 0;
+        let curCsAway = 0;
+
         let systemData = {
-            odds: {
-                odds_1x2_1: 2.35, odds_1x2_x: 3.25, odds_1x2_2: 3.20,
-                odds_adv_1: 1.61, odds_adv_2: 2.30,
-                odds_ou_over: 1.90, odds_ou_under: 1.90,
-                flat_cs: 8.50, flat_fg: 6.00
-            },
-            players: {}, // {'Angus': { selections: {}, status: 'locked'/'open', totalWager: 10, finalReturn: 10 }}
-            result: null // { score: '2-1', advance: '法國 晉級', scorer: 'Mbappe' }
+            players: {},
+            result: null
         };
 
-        // 目前這個瀏覽器分頁暫存的當前玩家自選單
-        let currentSelections = {}; 
-
-        // --- 初始化與 Storage 同步連動 ---
         window.onload = function() {
             loadFromStorage();
-            updateOddsUI();
             checkPlayerStatus();
             renderHostDashboard();
-            
-            // 每2秒自動重新整理同儕資料，達到多手機網頁模擬即時同步
             setInterval(() => {
                 loadFromStorage();
                 renderHostDashboard();
@@ -336,86 +331,44 @@
             }, 2000);
         };
 
-        function saveToStorage() {
-            localStorage.setItem('b365_sim_data', JSON.stringify(systemData));
-        }
-
+        function saveToStorage() { localStorage.setItem('b365_sgp_data', JSON.stringify(systemData)); }
         function loadFromStorage() {
-            const data = localStorage.getItem('b365_sim_data');
-            if (data) {
-                systemData = JSON.parse(data);
-            }
+            const d = localStorage.getItem('b365_sgp_data');
+            if(d) systemData = JSON.parse(d);
         }
 
         function resetAllData() {
-            if(confirm("確定要清除所有人資料重設嗎？")) {
-                localStorage.removeItem('b365_sim_data');
+            if(confirm("確定要清空全體數據重設嗎？")) {
+                localStorage.removeItem('b365_sgp_data');
                 location.reload();
             }
         }
 
-        // --- 賠率同步機制 (Host To Users) ---
-        function saveOddsFromHost() {
-            systemData.odds.odds_1x2_1 = parseFloat(document.getElementById('h_1x2_1').value) || 1.0;
-            systemData.odds.odds_1x2_x = parseFloat(document.getElementById('h_1x2_x').value) || 1.0;
-            systemData.odds.odds_1x2_2 = parseFloat(document.getElementById('h_1x2_2').value) || 1.0;
-            systemData.odds.odds_adv_1 = parseFloat(document.getElementById('h_adv_1').value) || 1.0;
-            systemData.odds.odds_adv_2 = parseFloat(document.getElementById('h_adv_2').value) || 1.0;
-            systemData.odds.odds_ou_over = parseFloat(document.getElementById('h_ou_o').value) || 1.0;
-            systemData.odds.odds_ou_under = parseFloat(document.getElementById('h_ou_u').value) || 1.0;
-            systemData.odds.flat_cs = parseFloat(document.getElementById('h_flat_cs').value) || 1.0;
-            systemData.odds.flat_fg = parseFloat(document.getElementById('h_flat_fg').value) || 1.0;
-            saveToStorage();
-            updateOddsUI();
-            alert("全體賠率已更新！");
-        }
-
-        function updateOddsUI() {
-            document.getElementById('lbl_1x2_1').innerText = systemData.odds.odds_1x2_1;
-            document.getElementById('lbl_1x2_x').innerText = systemData.odds.odds_1x2_x;
-            document.getElementById('lbl_1x2_2').innerText = systemData.odds.odds_1x2_2;
-            document.getElementById('lbl_adv_1').innerText = systemData.odds.odds_adv_1;
-            document.getElementById('lbl_adv_2').innerText = systemData.odds.odds_adv_2;
-            document.getElementById('lbl_ou_over').innerText = systemData.odds.odds_ou_over;
-            document.getElementById('lbl_ou_under').innerText = systemData.odds.odds_ou_under;
-            document.getElementById('lbl_flat_cs').innerText = "固定賠率: " + systemData.odds.flat_cs;
-            document.getElementById('lbl_flat_fg').innerText = "固定賠率: " + systemData.odds.flat_fg;
-        }
-
-        // --- 模式切換邏輯 ---
         function toggleMode() {
-            if (currentMode === 'player') {
+            if(currentMode === 'player') {
                 currentMode = 'host';
                 document.getElementById('playerView').classList.add('hidden');
                 document.getElementById('hostView').classList.remove('hidden');
                 document.getElementById('betSlip').style.display = 'none';
-                document.getElementById('btnToggleMode').innerText = '切換至 玩家手機模式';
-                renderHostDashboard();
+                document.getElementById('btnToggleMode').innerText = '切換至 玩家投注手機端';
             } else {
                 currentMode = 'player';
                 document.getElementById('hostView').classList.add('hidden');
                 document.getElementById('playerView').classList.remove('hidden');
-                document.getElementById('btnToggleMode').innerText = '切換至 Host 模式';
+                document.getElementById('btnToggleMode').innerText = '切換至 Host 大螢幕面板';
                 checkPlayerStatus();
             }
         }
 
-        // --- 玩家註冊/登入 ---
         function loginPlayer() {
             const name = document.getElementById('playerNameInput').value.trim();
-            if(!name) return alert("請輸入有效的名字！");
+            if(!name) return alert("請輸入有效名字！");
             currentPlayerName = name;
             
             if(!systemData.players[currentPlayerName]) {
-                systemData.players[currentPlayerName] = {
-                    selections: {},
-                    status: 'open',
-                    totalWager: 0,
-                    finalReturn: 10.00
-                };
+                systemData.players[currentPlayerName] = { selections: {}, status: 'open', totalOdds: 0, toReturn: 0, finalReturn: 0 };
                 saveToStorage();
             }
-            
             document.getElementById('loginSection').classList.add('hidden');
             document.getElementById('currentUserTag').innerText = "👤 " + currentPlayerName;
             document.getElementById('currentUserTag').classList.remove('hidden');
@@ -423,272 +376,236 @@
             checkPlayerStatus();
         }
 
-        function checkPlayerStatus() {
-            if (!currentPlayerName) return;
-            const p = systemData.players[currentPlayerName];
-            if (p && p.status === 'locked') {
-                document.getElementById('bettingSection').classList.add('hidden');
-                document.getElementById('betSlip').style.display = 'none';
-                document.getElementById('lockedSection').classList.remove('hidden');
-                
-                // 渲染已鎖定下注總覽
-                let html = `<p style='margin-bottom:8px; border-bottom:1px solid #333; padding-bottom:5px;'><b>你的組合單明細：</b></p>`;
-                for (let market in p.selections) {
-                    let sel = p.selections[market];
-                    html += `<div style='display:flex; justify-content:space-between; margin-bottom:4px;'>
-                                <span>[${market}] ${sel.choice}</span>
-                                <span>$${sel.wager} (＠${sel.odds})</span>
-                             </div>`;
-                }
-                document.getElementById('summaryOfBets').innerHTML = html;
-            }
-        }
-
-        // --- 玩家選擇投注賠率按鈕觸發 ---
-        function selectOdds(marketKey, choiceText, oddsId) {
-            if (!currentPlayerName) return alert("請先在頂部輸入名字登入！");
+        // 處理盤口按鈕的高亮與串關加成
+        function toggleSelection(marketKey, choiceText, oddsVal, btnId) {
+            if(!currentPlayerName) return alert("請先輸入名字加入遊戲！");
             
-            let finalOdds = systemData.odds[oddsId];
-            
-            if (currentSelections[marketKey]) {
-                // 如果點選同一個就取消
+            if(currentSelections[marketKey] && currentSelections[marketKey].choice === choiceText) {
+                // 重複點選則取消
                 delete currentSelections[marketKey];
-                document.getElementById(oddsId.replace('odds_','o_')).classList.remove('active');
+                document.getElementById(btnId).classList.remove('active');
             } else {
-                // 清除同盤口其他按鈕特效
-                if(marketKey === '90mins') {
-                    document.getElementById('o_1x2_1').classList.remove('active');
-                    document.getElementById('o_1x2_x').classList.remove('active');
-                    document.getElementById('o_1x2_2').classList.remove('active');
-                } else if(marketKey === 'advance') {
-                    document.getElementById('o_adv_1').classList.remove('active');
-                    document.getElementById('o_adv_2').classList.remove('active');
-                } else if(marketKey === 'total_score') {
-                    document.getElementById('o_ou_over').classList.remove('active');
-                    document.getElementById('o_ou_under').classList.remove('active');
-                }
+                // 同一盤口只能選一個（例如買了法國勝，就自動取消和局和客勝的高亮）
+                clearMarketUiActive(marketKey);
                 
-                currentSelections[marketKey] = {
-                    choice: choiceText,
-                    odds: finalOdds,
-                    wager: 0
-                };
-                document.getElementById(oddsId.replace('odds_','o_')).classList.add('active');
+                currentSelections[marketKey] = { choice: choiceText, odds: oddsVal };
+                document.getElementById(btnId).classList.add('active');
             }
             renderBetSlip();
         }
 
-        // 處理輸入框型（正確比分/首名入球）
-        function updateCustomBet(marketKey, val) {
-            if (!currentPlayerName) return;
-            val = val.trim();
-            if(!val) {
-                delete currentSelections[marketKey];
+        function clearMarketUiActive(marketKey) {
+            if(marketKey === '90mins') {
+                ['btn_m1_1','btn_m1_x','btn_m1_2'].forEach(id => document.getElementById(id).classList.remove('active'));
+            } else if(marketKey === 'advance') {
+                ['btn_m2_1','btn_m2_2'].forEach(id => document.getElementById(id).classList.remove('active'));
+            } else if(marketKey === 'total_goals') {
+                ['btn_m3_o','btn_m3_u'].forEach(id => document.getElementById(id).classList.remove('active'));
+            } else if(marketKey === 'player_score') {
+                ['btn_p_mbappe','btn_p_yamal','btn_p_olise'].forEach(id => document.getElementById(id).classList.remove('active'));
+            }
+        }
+
+        // Correct Score 計數器操作
+        function adjustScore(type, delta) {
+            if(type === 'home') {
+                curCsHome = Math.max(0, curCsHome + delta);
+                document.getElementById('scoreHomeDisplay').innerText = curCsHome;
             } else {
-                let finalOdds = (marketKey === 'correct_score') ? systemData.odds.flat_cs : systemData.odds.flat_fg;
-                currentSelections[marketKey] = {
-                    choice: val,
-                    odds: finalOdds,
-                    wager: 0
-                };
+                curCsAway = Math.max(0, curCsAway + delta);
+                document.getElementById('scoreAwayDisplay').innerText = curCsAway;
+            }
+            document.getElementById('csDynamicText').innerText = `${curCsHome}-${curCsAway}`;
+        }
+
+        function confirmCorrectScoreSelection() {
+            if(!currentPlayerName) return alert("請先輸入名字加入遊戲！");
+            const scoreString = `${curCsHome}-${curCsAway}`;
+            const btn = document.getElementById('btnCorrectScoreActive');
+            
+            if(currentSelections['correct_score']) {
+                delete currentSelections['correct_score'];
+                btn.classList.remove('active');
+            } else {
+                currentSelections['correct_score'] = { choice: scoreString, odds: 8.50 }; // 正確比分給予固定高賠率 8.50
+                btn.classList.add('active');
             }
             renderBetSlip();
         }
 
-        // --- 渲染 bet365 底部投注單 ---
+        // --- 核心過關組合計演算法 (Same Game Parlay) ---
         function renderBetSlip() {
             const slip = document.getElementById('betSlip');
-            const container = document.getElementById('slipItemsContainer');
-            
+            const scroller = document.getElementById('slipScroller');
             const keys = Object.keys(currentSelections);
-            if (keys.length === 0) {
+            
+            if(keys.length === 0) {
                 slip.style.display = 'none';
                 return;
             }
             
             slip.style.display = 'block';
+            
+            // 串關係數計算：正統 bet365 的 Same Game Parlay 在多重選取時，賠率是連乘（或稍作優化修正）
+            // 這裡採用標準乘積計算總賠率
+            let finalMultiOdds = 1.0;
             let html = '';
             
-            keys.forEach(key => {
-                let item = currentSelections[key];
+            keys.forEach(k => {
+                let s = currentSelections[k];
+                finalMultiOdds *= s.odds;
                 html += `
-                <div class="slip-item" style="background:#2d2d2d; padding:8px; border-radius:4px; margin-bottom:6px;">
-                    <div>
-                        <div style="color:white; font-weight:bold;">${item.choice}</div>
-                        <div style="font-size:11px; color:var(--b365-text-muted);">${key.toUpperCase()}</div>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="color:var(--b365-yellow); font-weight:bold;">@${item.odds}</span>
-                        <input type="number" class="wager-input" style="width:55px;" placeholder="注碼" 
-                               value="${item.wager || ''}" oninput="updateItemWager('${key}', this.value)">
-                    </div>
+                <div class="slip-item-row">
+                    <span>⚽ [${k.toUpperCase()}] <b>${s.choice}</b></span>
+                    <span style="color:var(--b365-yellow)">@${s.odds.toFixed(2)}</span>
                 </div>`;
             });
             
-            container.innerHTML = html;
-            calculateSlipTotal();
+            // 如果選了2個或以上的盤口，顯示串關風險提醒
+            document.getElementById('parlayReminderBlock').style.display = keys.length >= 2 ? 'block' : 'none';
+            
+            scroller.innerHTML = html;
+            document.getElementById('lblParlayCount').innerText = `(${keys.length} 個盤口組合單)`;
+            document.getElementById('lblTotalOdds').innerText = finalMultiOdds.toFixed(2);
+            
+            // $10 投入這單的預計回報
+            let toReturn = finalMultiOdds * 10;
+            document.getElementById('lblToReturn').innerText = toReturn.toFixed(2);
         }
 
-        function updateItemWager(key, val) {
-            let num = parseFloat(val) || 0;
-            if(currentSelections[key]) {
-                currentSelections[key].wager = num;
-            }
-            calculateSlipTotal();
-        }
-
-        function calculateSlipTotal() {
-            let total = 0;
-            for(let k in currentSelections) {
-                total += currentSelections[k].wager;
-            }
-            document.getElementById('totalWagerShow').value = total.toFixed(2);
-            let remain = 10 - total;
-            document.getElementById('slipBudgetCount').innerText = `剩餘可用資金: $${remain.toFixed(2)}`;
+        // 玩家確認鎖定下注
+        function submitFinalBetSlip() {
+            loadFromStorage();
+            const keys = Object.keys(currentSelections);
+            if(keys.length === 0) return alert("請至少選擇一個投注項目！");
             
-            const btn = document.getElementById('btnSubmitBetSlip');
-            if (Math.abs(total - 10) < 0.01) {
-                btn.style.background = "var(--b365-yellow)";
-                btn.disabled = false;
-                btn.innerText = "Place Bet $10.00 (確認送出)";
-            } else {
-                btn.style.background = "#555";
-                btn.disabled = true;
-                btn.innerText = `注碼總數必須等於 $10 (目前: $${total.toFixed(2)})`;
-            }
-        }
-
-        // --- 確定下注（一擲定乾坤鎖定） ---
-        function submitFinalBet() {
-            loadFromStorage(); // 下注前再拉一次最新狀態防覆蓋
+            let finalMultiOdds = 1.0;
+            keys.forEach(k => finalMultiOdds *= currentSelections[k].odds);
             
-            let total = 0;
-            for(let k in currentSelections) { total += currentSelections[k].wager; }
-            if (Math.abs(total - 10) > 0.01) {
-                return alert("注碼總數必須分配剛好等於 $10！");
-            }
-            
-            if(confirm("確定送出投注嗎？開賽前只有這一次機會，送出後無法更改！")) {
-                systemData.players[currentPlayerName].selections = JSON.parse(stringifyCircular(currentSelections));
+            if(confirm(`確認使用整筆 $10 下注這個過關組合嗎？\n總共 ${keys.length} 個項目，總賠率為 @${finalMultiOdds.toFixed(2)}\n送出後將不可重選！`)) {
+                systemData.players[currentPlayerName].selections = JSON.parse(JSON.stringify(currentSelections));
                 systemData.players[currentPlayerName].status = 'locked';
-                systemData.players[currentPlayerName].totalWager = 10;
+                systemData.players[currentPlayerName].totalOdds = finalMultiOdds;
+                systemData.players[currentPlayerName].toReturn = finalMultiOdds * 10;
+                systemData.players[currentPlayerName].finalReturn = 0; // 等待開賽結算
                 saveToStorage();
                 checkPlayerStatus();
             }
         }
 
-        // --- Host 賽後自動結算系統 ---
+        function checkPlayerStatus() {
+            if(!currentPlayerName) return;
+            const p = systemData.players[currentPlayerName];
+            if(p && p.status === 'locked') {
+                document.getElementById('bettingSection').classList.add('hidden');
+                document.getElementById('betSlip').style.display = 'none';
+                document.getElementById('lockedSection').classList.remove('hidden');
+                
+                let html = `<p style="color:var(--b365-yellow); font-weight:bold; margin-bottom:8px;">🎯 你的過關投注單明細 (總賠率 @${p.totalOdds.toFixed(2)})：</p>`;
+                for(let k in p.selections) {
+                    html += `<div style="display:flex; justify-content:space-between; color:#bbb; padding:3px 0;">
+                                <span>• ${p.selections[k].choice}</span>
+                                <span>@${p.selections[k].odds}</span>
+                             </div>`;
+                }
+                html += `<div style="margin-top:10px; border-top:1px solid #333; padding-top:8px; text-align:right;">
+                            下注：<b>$10.00</b> | 預計可得：<b style="color:var(--b365-bright-green)">$${p.toReturn.toFixed(2)}</b>
+                         </div>`;
+                document.getElementById('summaryOfBets').innerHTML = html;
+            }
+        }
+
+        // --- Host 賽後結算邏輯 ---
         function settleMatch() {
-            const score = document.getElementById('res_score').value.trim(); // "2-1"
-            const advance = document.getElementById('res_advance').value;   // "法國 晉級"
-            const scorer = document.getElementById('res_scorer').value.trim().toLowerCase(); // "mbappe"
+            const score = document.getElementById('res_score').value.trim();
+            const advance = document.getElementById('res_advance').value;
+            const scorer = document.getElementById('res_scorer').value;
             
-            if(!score || !scorer) return alert("請完整輸入賽事結果進行結算！");
+            if(!score) return alert("請輸入正確比分比數！");
             
-            // 解析 1X2 與 大小球
             const parts = score.split('-');
-            const homeScore = parseInt(parts[0]);
-            const awayScore = parseInt(parts[1]);
-            const totalGoals = homeScore + awayScore;
+            const home = parseInt(parts[0]);
+            const away = parseInt(parts[1]);
+            const total = home + away;
             
-            let winner1X2 = '';
-            if (homeScore > awayScore) winner1X2 = '主勝 (法國)';
-            else if (homeScore < awayScore) winner1X2 = '客勝 (西班牙)';
-            else winner1X2 = '和局';
-            
-            let winnerOU = (totalGoals > 2.5) ? 'Over 2.5 (大球)' : 'Under 2.5 (小球)';
+            let win1X2 = (home > away) ? '法國 勝' : (home < away ? '西班牙 勝' : '和局');
+            let winOU = (total > 2.5) ? 'Over 2.5 (大球)' : 'Under 2.5 (小球)';
             
             systemData.result = { score, advance, scorer };
             
-            // 遍歷所有玩家算錢
-            for (let name in systemData.players) {
+            for(let name in systemData.players) {
                 let p = systemData.players[name];
-                if (p.status !== 'locked') {
-                    p.finalReturn = 0; // 未按確認送出的算輸
+                if(p.status !== 'locked') {
+                    p.finalReturn = 0;
                     continue;
                 }
                 
-                let currentWallet = 0; // 派彩池
-                let unusedWager = 10;
+                let allConditionsMet = true;
+                let selectionCount = 0;
                 
-                for (let market in p.selections) {
-                    let bet = p.selections[market];
-                    unusedWager -= bet.wager;
-                    let isWin = false;
+                for(let market in p.selections) {
+                    selectionCount++;
+                    let choice = p.selections[market].choice;
                     
-                    if (market === '90mins' && bet.choice === winner1X2) isWin = true;
-                    if (market === 'advance' && bet.choice === advance) isWin = true;
-                    if (market === 'total_score' && bet.choice === winnerOU) isWin = true;
-                    if (market === 'correct_score' && bet.choice === score) isWin = true;
-                    if (market === 'first_goal' && bet.choice.trim().toLowerCase() === scorer) isWin = true;
-                    
-                    if (isWin) {
-                        currentWallet += bet.wager * bet.odds;
-                    }
+                    if(market === '90mins' && choice !== win1X2) allConditionsMet = false;
+                    if(market === 'advance' && choice !== advance) allConditionsMet = false;
+                    if(market === 'total_goals' && choice !== winOU) allConditionsMet = false;
+                    if(market === 'correct_score' && choice !== score) allConditionsMet = false;
+                    if(market === 'player_score' && choice !== scorer) allConditionsMet = false;
                 }
-                // 把沒壓滿的零頭加上去（正常都是0，因為限制必須壓滿$10）
-                currentWallet += Math.max(0, unusedWager);
-                p.finalReturn = currentWallet;
+                
+                if(selectionCount > 0 && allConditionsMet) {
+                    p.finalReturn = p.toReturn; // 全對，贏取整筆連乘獎金
+                } else {
+                    p.finalReturn = 0; // 只要有一項不符合，整單全輸
+                }
             }
-            
             saveToStorage();
             renderHostDashboard();
-            alert("結算成功！大螢幕排行榜已更新。");
+            alert("大螢幕排行榜結算完成！");
         }
 
-        // --- 渲染大螢幕 TV Dashboard & 實時牆 ---
         function renderHostDashboard() {
             const tbody = document.getElementById('leaderboardBody');
             const wall = document.getElementById('liveBetsWall');
             if(!tbody) return;
             
-            // 1. 排行榜
-            let playerArr = [];
-            for(let name in systemData.players) {
-                playerArr.push({ name: name, ...systemData.players[name] });
-            }
+            let arr = [];
+            for(let n in systemData.players) arr.push({name: n, ...systemData.players[n]});
             
-            // 排序: 最終資產高到低
-            playerArr.sort((a, b) => b.finalReturn - a.finalReturn);
+            // 排序：回報金額高到低
+            arr.sort((a,b) => b.finalReturn - a.finalReturn);
             
             let tbodyHtml = '';
-            playerArr.forEach((p, idx) => {
-                let rankClass = `rank-badge rank-${idx+1}`;
-                let statusTag = p.status === 'locked' ? '✅ 已鎖定送出' : '⏳ 正在挑選...';
-                let returnColor = p.finalReturn > 10 ? '#00ff00' : (p.finalReturn < 10 && systemData.result ? '#ff4d4d' : '#fff');
+            arr.forEach((p, idx) => {
+                let stateStr = p.status === 'locked' ? '🔒 已鎖定下注' : '⏳ 未送出單';
+                let displayReturn = systemData.result ? `$${p.finalReturn.toFixed(2)}` : `$${p.toReturn.toFixed(2)} (預計)`;
+                let rowStyle = p.finalReturn > 0 && systemData.result ? 'style="background:rgba(0,255,127,0.1);"' : '';
                 
                 tbodyHtml += `
-                <tr>
-                    <td><span class="${rankClass}">${idx+1}</span></td>
-                    <td style="font-weight:bold; font-size:16px; color:var(--b365-yellow);">${p.name}</td>
-                    <td>${statusTag}</td>
-                    <td style="color:#8e8e8e;">$10.00</td>
-                    <td style="font-weight:bold; font-size:18px; color:${returnColor};">$${p.finalReturn.toFixed(2)}</td>
+                <tr ${rowStyle}>
+                    <td><b>${idx+1}</b></td>
+                    <td style="color:var(--b365-yellow); font-weight:bold; font-size:15px;">${p.name}</td>
+                    <td style="font-size:12px;">${stateStr}</td>
+                    <td>${Object.keys(p.selections).length} 個盤口</td>
+                    <td>@${p.totalOdds.toFixed(2)}</td>
+                    <td style="font-weight:bold; color:var(--b365-bright-green); font-size:16px;">${displayReturn}</td>
                 </tr>`;
             });
-            tbody.innerHTML = tbodyHtml || `<tr><td colspan="5" style="text-align:center; color:#666;">目前暫無玩家加入...</td></tr>`;
+            tbody.innerHTML = tbodyHtml || `<tr><td colspan="6" style="text-align:center; color:#555;">等待玩家加入...</td></tr>`;
             
-            // 2. 投注動態牆
             let wallHtml = '';
             for(let name in systemData.players) {
                 let p = systemData.players[name];
-                wallHtml += `<div style="background:#1a1a1a; padding:10px; border-radius:4px; margin-bottom:8px; border-left:4px solid var(--b365-mid-green);">`;
-                wallHtml += `<div style="font-weight:bold; color:var(--b365-yellow); margin-bottom:4px;">${name} 的組合：</div>`;
-                
-                let count = 0;
+                wallHtml += `<div style="background:#222; padding:8px; border-radius:4px; margin-bottom:8px; border-left:3px solid var(--b365-bright-green);">`;
+                wallHtml += `<div style="font-weight:bold; color:white;">${name} <span style="color:var(--b365-yellow)">@${p.totalOdds.toFixed(2)}</span></div>`;
                 for(let m in p.selections) {
-                    count++;
-                    let b = p.selections[m];
-                    wallHtml += `<div style="color:#bbb; padding-left:10px;">• ${b.choice} → 分配 <b>$${b.wager}</b> (賠率:${b.odds})</div>`;
+                    wallHtml += `<div style="color:#aaa; padding-left:8px; font-size:11px;">• ${p.selections[m].choice} (@${p.selections[m].odds})</div>`;
                 }
-                if(count === 0) wallHtml += `<div style="color:#555; padding-left:10px;">尚未選取任何組合</div>`;
                 wallHtml += `</div>`;
             }
-            wall.innerHTML = wallHtml || `<div style="color:#555; text-align:center;">等待玩家落注動態...</div>`;
+            wall.innerHTML = wallHtml || `<div style="color:#555; text-align:center;">暫無落注組合...</div>`;
         }
-
-        // Helper
-        function stringifyCircular(obj) { return JSON.stringify(obj); }
     </script>
 </body>
 </html>
