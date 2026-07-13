@@ -450,6 +450,63 @@
             checkPlayerStatus();
         }
 
+        // ===== 相依盤口 (Correlated Markets) 衝突檢查 =====
+        // 邏輯：如果兩個盤口的結果會互相決定彼此（例如知道正確比分就等於知道勝負），
+        // 就不允許同時選取，避免像 bet365 SGP 那樣「靠相依結果灌水賠率」。
+        function isDrawScore(scoreStr) {
+            const parts = scoreStr.split('-');
+            return parseInt(parts[0]) === parseInt(parts[1]);
+        }
+        function getWinnerFromScore(scoreStr) {
+            const parts = scoreStr.split('-');
+            const home = parseInt(parts[0]), away = parseInt(parts[1]);
+            return home > away ? '法國 勝' : (home < away ? '西班牙 勝' : '和局');
+        }
+
+        // 檢查「即將選取」的 newKey/newChoice 是否與目前已選的其他盤口衝突
+        // 回傳衝突說明文字，若不衝突則回傳 null
+        function findConflict(newKey, newChoice) {
+            const sel = currentSelections;
+
+            if (newKey === 'correct_score') {
+                if (sel['90分鐘+補時']) {
+                    return "⚠️ 無法同時選取：正確比分已經直接決定了勝負結果，與「Full Time Result」盤口重複，請先取消其中一項。";
+                }
+                if (sel['total_goals']) {
+                    return "⚠️ 無法同時選取：正確比分已經直接決定了總進球數，與「Goals Over/Under」盤口重複，請先取消其中一項。";
+                }
+                if (sel['advance'] && !isDrawScore(newChoice)) {
+                    return "⚠️ 無法同時選取：此比分並非和局，代表90分鐘內已分勝負，晉級球隊已確定，與「To Advance」盤口重複。";
+                }
+            }
+
+            if (newKey === '90分鐘+補時') {
+                if (sel['correct_score']) {
+                    return "⚠️ 無法同時選取：已選的正確比分已經直接決定了勝負結果，請先取消正確比分。";
+                }
+                if (newChoice !== '和局' && sel['advance']) {
+                    return "⚠️ 無法同時選取：選擇某隊「勝」代表90分鐘內已分勝負，晉級球隊已確定，與「To Advance」盤口重複。";
+                }
+            }
+
+            if (newKey === 'total_goals') {
+                if (sel['correct_score']) {
+                    return "⚠️ 無法同時選取：已選的正確比分已經直接決定了總進球數，請先取消正確比分。";
+                }
+            }
+
+            if (newKey === 'advance') {
+                if (sel['correct_score'] && !isDrawScore(sel['correct_score'].choice)) {
+                    return "⚠️ 無法同時選取：已選的正確比分並非和局，晉級球隊已被決定，請先取消正確比分或選擇和局比分。";
+                }
+                if (sel['90分鐘+補時'] && sel['90分鐘+補時'].choice !== '和局') {
+                    return "⚠️ 無法同時選取：已選的勝負結果為某隊「勝」，代表晉級球隊已被決定，請先取消勝負盤口或改選和局。";
+                }
+            }
+
+            return null; // 沒有衝突（player_score 永遠不衝突）
+        }
+
         function toggleSelection(marketKey, choiceText, oddsVal, btnId) {
             if(!currentPlayerName) return alert("請先輸入名字加入遊戲！");
             
@@ -457,6 +514,11 @@
                 delete currentSelections[marketKey];
                 document.getElementById(btnId).classList.remove('active');
             } else {
+                const conflict = findConflict(marketKey, choiceText);
+                if (conflict) {
+                    alert(conflict);
+                    return;
+                }
                 clearMarketUiActive(marketKey);
                 currentSelections[marketKey] = { choice: choiceText, odds: oddsVal };
                 document.getElementById(btnId).classList.add('active');
@@ -496,6 +558,11 @@
                 delete currentSelections['correct_score'];
                 btn.classList.remove('active');
             } else {
+                const conflict = findConflict('correct_score', scoreString);
+                if (conflict) {
+                    alert(conflict);
+                    return;
+                }
                 currentSelections['correct_score'] = { choice: scoreString, odds: 8.50 }; 
                 btn.classList.add('active');
             }
