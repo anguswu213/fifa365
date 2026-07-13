@@ -69,7 +69,7 @@ window.state = {
     role: 'none', // 'none' | 'host' | 'player'
     roomCode: '',
     nickname: '',
-    playerId: '',
+    playerId: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID().substring(0, 8) : 'player_' + Math.floor(Math.random() * 1000),
     playerBudget: 10.00,
     playersList: [],
     roomState: {
@@ -80,8 +80,17 @@ window.state = {
     notifications: [],
     isSubmitting: false,
     authCompleted: false,
-    debugId: ''
+    debugId: '',
+    offlineMode: false
 };
+
+// Local Sync broadcast channel to allow zero-config multi-tab demo play on GitHub Pages
+let localBroadcast = null;
+try {
+    localBroadcast = new BroadcastChannel('betting-party-local-broadcast');
+} catch (e) {
+    console.warn("BroadcastChannel not supported in this environment.", e);
+}
 
 // MARKETS Data Structure
 const MARKETS = [
@@ -95,9 +104,53 @@ const MARKETS = [
 let app, db, auth;
 let authPromise = null;
 
+// Local Storage / Broadcast fallback state management
+function broadcastOfflineState() {
+    if (!window.state.offlineMode) return;
+    const payload = {
+        roomCode: window.state.roomCode,
+        roomState: window.state.roomState,
+        playersList: window.state.playersList
+    };
+    if (localBroadcast) {
+        localBroadcast.postMessage({ type: 'OFFLINE_STATE_SYNC', payload });
+    }
+    localStorage.setItem(`offline_room_${window.state.roomCode}`, JSON.stringify(payload));
+}
+
+function initOfflineSync() {
+    if (localBroadcast) {
+        localBroadcast.onmessage = (event) => {
+            if (!window.state.offlineMode || !window.state.roomCode) return;
+            if (event.data && event.data.type === 'OFFLINE_STATE_SYNC') {
+                const incoming = event.data.payload;
+                if (incoming && incoming.roomCode === window.state.roomCode) {
+                    window.state.roomState = incoming.roomState;
+                    window.state.playersList = incoming.playersList;
+                    
+                    // Sync active state if playing in this room
+                    if (window.state.role === 'player') {
+                        const selfObj = window.state.playersList.find(p => p.playerId === window.state.playerId);
+                        if (selfObj) {
+                            window.state.localBets = selfObj.bets || {};
+                            window.state.lockedIn = selfObj.isLocked || false;
+                        }
+                    }
+                    renderApp();
+                }
+            }
+        };
+    }
+}
+
 // Guarded Authentication Setup
 async function initFirebase() {
     try {
+        // Instantly bypass timeouts if we detect placeholder keys on GitHub Pages
+        if (firebaseConfig.apiKey === "dummy-key-for-local-testing") {
+            throw new Error("Local fallback credentials detected.");
+        }
+        
         app = initializeApp(firebaseConfig);
         db = getFirestore(app);
         auth = getAuth(app);
@@ -115,8 +168,14 @@ async function initFirebase() {
         window.state.authCompleted = true;
         renderApp();
     } catch (e) {
-        console.error("Firebase auth handshakes failed: ", e);
-        showToast("Error establishing network security keys. Operating in offline demonstration mode.", "error");
+        console.warn("Could not handshake with Firebase Cloud. Activating Offline Multi-Tab Simulation Engine:", e);
+        window.state.offlineMode = true;
+        window.state.authCompleted = true;
+        initOfflineSync();
+        renderApp();
+        setTimeout(() => {
+            showToast("Running in Local Demo Mode! Open multiple browser tabs to test multi-device features.", "info");
+        }, 800);
     }
 }
 
@@ -202,7 +261,7 @@ function showToast(message, type = "info") {
     }, 4000);
 }
 
-// Creates a Room Entry on Firestore
+// Creates a Room Entry on Firestore or Local Sync Engine
 async function handleCreateRoom() {
     if (!window.state.authCompleted) {
         showToast("Authenticating server connection... Please try again in 1 second.", "error");
@@ -216,6 +275,23 @@ async function handleCreateRoom() {
     let code = '';
     for (let i = 0; i < 4; i++) {
         code += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+    }
+    
+    if (window.state.offlineMode) {
+        window.state.roomCode = code;
+        window.state.role = 'host';
+        window.state.roomState = {
+            roomCode: code,
+            status: 'open',
+            settlementResults: {}
+        };
+        window.state.playersList = [];
+        playSynthSound('lock');
+        showToast(`Local Party Room ${code} initiated! Open a new browser window/tab to join!`, "success");
+        broadcastOfflineState();
+        window.state.isSubmitting = false;
+        renderApp();
+        return;
     }
     
     try {
@@ -263,6 +339,50 @@ async function handleJoinRoom(code, name) {
     const formattedCode = code.toUpperCase().trim();
     const cleanName = name.trim();
     
+    if (window.state.offlineMode) {
+        // Look up offline storage data
+        const localDataString = localStorage.getItem(`offline_room_${formattedCode}`);
+        if (!localDataString) {
+            // Attempt to build a local mock room if none exists to assist easy testing
+            window.state.roomState = {
+                roomCode: formattedCode,
+                status: 'open',
+                settlementResults: {}
+            };
+        } else {
+            const parsed = JSON.parse(localDataString);
+            window.state.roomState = parsed.roomState;
+            window.state.playersList = parsed.playersList || [];
+        }
+        
+        window.state.roomCode = formattedCode;
+        window.state.nickname = cleanName;
+        window.state.role = 'player';
+        
+        // Add self to players list safely
+        const existingPlayerIdx = window.state.playersList.findIndex(p => p.playerId === window.state.playerId);
+        const playerObj = {
+            playerId: window.state.playerId,
+            roomCode: formattedCode,
+            name: cleanName,
+            bets: {},
+            isLocked: false,
+            updatedAt: new Date().toISOString()
+        };
+        if (existingPlayerIdx >= 0) {
+            window.state.playersList[existingPlayerIdx] = playerObj;
+        } else {
+            window.state.playersList.push(playerObj);
+        }
+        
+        playSynthSound('lock');
+        showToast(`Joined Local Room ${formattedCode}!`, "success");
+        broadcastOfflineState();
+        window.state.isSubmitting = false;
+        renderApp();
+        return;
+    }
+    
     try {
         // Verify if room code exists
         const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', formattedCode);
@@ -308,6 +428,7 @@ let roomUnsub = null;
 let playersUnsub = null;
 
 function setupSubscriptions() {
+    if (window.state.offlineMode) return;
     if (roomUnsub) roomUnsub();
     if (playersUnsub) playersUnsub();
     
@@ -397,6 +518,17 @@ async function updateLocalStake(marketId, option, delta) {
     
     playSynthSound('tap');
     
+    if (window.state.offlineMode) {
+        const existingPlayerIdx = window.state.playersList.findIndex(p => p.playerId === window.state.playerId);
+        if (existingPlayerIdx >= 0) {
+            window.state.playersList[existingPlayerIdx].bets = window.state.localBets;
+            window.state.playersList[existingPlayerIdx].updatedAt = new Date().toISOString();
+        }
+        broadcastOfflineState();
+        renderApp();
+        return;
+    }
+    
     // Sync immediate status with cloud
     try {
         const playerRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', window.state.playerId);
@@ -412,6 +544,21 @@ async function updateLocalStake(marketId, option, delta) {
 
 async function handleTogglePlayerLock() {
     const isNextLocked = !window.state.lockedIn;
+    
+    if (window.state.offlineMode) {
+        const existingPlayerIdx = window.state.playersList.findIndex(p => p.playerId === window.state.playerId);
+        if (existingPlayerIdx >= 0) {
+            window.state.playersList[existingPlayerIdx].isLocked = isNextLocked;
+            window.state.playersList[existingPlayerIdx].updatedAt = new Date().toISOString();
+        }
+        window.state.lockedIn = isNextLocked;
+        playSynthSound('lock');
+        showToast(isNextLocked ? "Locked & Transmitted to Main Board!" : "Stakes Unlocked for Modifications.", "success");
+        broadcastOfflineState();
+        renderApp();
+        return;
+    }
+    
     try {
         const playerRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', window.state.playerId);
         await updateDoc(playerRef, {
@@ -428,6 +575,18 @@ async function handleTogglePlayerLock() {
 }
 
 async function handleHostSetStatus(nextStatus) {
+    if (window.state.offlineMode) {
+        window.state.roomState.status = nextStatus;
+        if (nextStatus === 'open') {
+            window.state.roomState.settlementResults = {};
+        }
+        playSynthSound('lock');
+        showToast(`Game is now ${nextStatus.toUpperCase()}!`, "success");
+        broadcastOfflineState();
+        renderApp();
+        return;
+    }
+    
     try {
         const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', window.state.roomCode);
         const updates = { status: nextStatus };
@@ -449,6 +608,14 @@ async function handleSettleMarket(marketId, winningOption) {
         delete nextResults[marketId]; // toggle action
     } else {
         nextResults[marketId] = winningOption;
+    }
+    
+    if (window.state.offlineMode) {
+        window.state.roomState.settlementResults = nextResults;
+        playSynthSound('tap');
+        broadcastOfflineState();
+        renderApp();
+        return;
     }
     
     try {
