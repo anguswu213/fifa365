@@ -72,6 +72,11 @@
         /* Player to Score Grid */
         .player-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid var(--b365-border); background: #232323; }
         .player-info { display: flex; align-items: center; gap: 8px; }
+        .player-name-block { display: flex; flex-direction: column; gap: 4px; }
+        .player-name { font-size: 13px; }
+        .last5-chips { display: flex; gap: 3px; }
+        .last5-chip { width: 16px; height: 16px; border-radius: 3px; background: #333; color: #888; font-size: 9px; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+        .last5-chip.scored { background: rgba(0, 255, 127, 0.22); color: var(--b365-bright-green); }
         .player-shirt { width: 20px; height: 20px; background: #005a42; border-radius: 50%; font-size: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
         .btn-player-odds { background: #333; border: 1px solid #444; color: var(--b365-yellow); padding: 8px 18px; font-weight: bold; border-radius: 4px; cursor: pointer; min-width: 70px; text-align: center; font-size: 13px; }
         .btn-player-odds.active { background: rgba(255, 223, 27, 0.2); border-color: var(--b365-yellow); color: var(--b365-bright-green); }
@@ -209,16 +214,100 @@
             <div class="market-card">
                 <div class="market-title">Player to Score<span class="market-subtitle">包括加時</span></div>
                 <div class="player-row">
-                    <div class="player-info"><div class="player-shirt" style="background:#75AADB;">10</div><span>Lionel Messi (阿根廷)</span></div>
+                    <div class="player-info">
+                        <div class="player-shirt" style="background:#75AADB;">10</div>
+                        <div class="player-name-block">
+                            <span class="player-name">Lionel Messi (阿根廷)</span>
+                            <div class="last5-chips">
+                                <span class="last5-chip scored">1</span>
+                                <span class="last5-chip scored">1</span>
+                                <span class="last5-chip scored">1</span>
+                                <span class="last5-chip">0</span>
+                                <span class="last5-chip">0</span>
+                            </div>
+                        </div>
+                    </div>
                     <button class="btn-player-odds" id="btn_p_messi" onclick="toggleSelection('player_score', 'Lionel Messi 進球', 2.50, 'btn_p_messi')">2.50</button>
                 </div>
                 <div class="player-row">
-                    <div class="player-info"><div class="player-shirt" style="background:#c60b1e;">21</div><span>Mikel Oyarzabal (西班牙)</span></div>
+                    <div class="player-info">
+                        <div class="player-shirt" style="background:#75AADB;">9</div>
+                        <div class="player-name-block">
+                            <span class="player-name">Julian Alvarez (阿根廷)</span>
+                            <div class="last5-chips">
+                                <span class="last5-chip">0</span>
+                                <span class="last5-chip">0</span>
+                                <span class="last5-chip">0</span>
+                                <span class="last5-chip scored">1</span>
+                                <span class="last5-chip">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn-player-odds" id="btn_p_alvarez" onclick="toggleSelection('player_score', 'Julian Alvarez 進球', 3.60, 'btn_p_alvarez')">3.60</button>
+                </div>
+                <div class="player-row">
+                    <div class="player-info">
+                        <div class="player-shirt" style="background:#75AADB;">22</div>
+                        <div class="player-name-block">
+                            <span class="player-name">Lautaro Martinez (阿根廷)</span>
+                            <div class="last5-chips">
+                                <span class="last5-chip scored">1</span>
+                                <span class="last5-chip">0</span>
+                                <span class="last5-chip">0</span>
+                                <span class="last5-chip scored">1</span>
+                                <span class="last5-chip scored">1</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn-player-odds" id="btn_p_lautaro" onclick="toggleSelection('player_score', 'Lautaro Martinez 進球', 3.60, 'btn_p_lautaro')">3.60</button>
+                </div>
+                <div class="player-row">
+                    <div class="player-info">
+                        <div class="player-shirt" style="background:#c60b1e;">21</div>
+                        <div class="player-name-block">
+                            <span class="player-name">Mikel Oyarzabal (西班牙)</span>
+                            <div class="last5-chips">
+                                <span class="last5-chip">0</span>
+                                <span class="last5-chip scored">2</span>
+                                <span class="last5-chip">0</span>
+                                <span class="last5-chip">0</span>
+                                <span class="last5-chip scored">1</span>
+                            </div>
+                        </div>
+                    </div>
                     <button class="btn-player-odds" id="btn_p_oyarzabal" onclick="toggleSelection('player_score', 'Mikel Oyarzabal 進球', 2.50, 'btn_p_oyarzabal')">2.50</button>
                 </div>
                 <div class="player-row">
-                    <div class="player-info"><div class="player-shirt" style="background:#75AADB;">9</div><span>Julian Alvarez (阿根廷)</span></div>
-                    <button class="btn-player-odds" id="btn_p_alvarez" onclick="toggleSelection('player_score', 'Julian Alvarez 進球', 3.60, 'btn_p_alvarez')">3.60</button>
+                    <div class="player-info">
+                        <div class="player-shirt" style="background:#c60b1e;">7</div>
+                        <div class="player-name-block">
+                            <span class="player-name">Ferran Torres (西班牙)</span>
+                            <div class="last5-chips">
+                                <span class="last5-chip">0</span>
+                                <span class="last5-chip">0</span>
+                                <span class="last5-chip">0</span>
+                                <span class="last5-chip">0</span>
+                                <span class="last5-chip">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn-player-odds" id="btn_p_ferran" onclick="toggleSelection('player_score', 'Ferran Torres 進球', 3.60, 'btn_p_ferran')">3.60</button>
+                </div>
+                <div class="player-row">
+                    <div class="player-info">
+                        <div class="player-shirt" style="background:#c60b1e;">19</div>
+                        <div class="player-name-block">
+                            <span class="player-name">Lamine Yamal (西班牙)</span>
+                            <div class="last5-chips">
+                                <span class="last5-chip">0</span>
+                                <span class="last5-chip">0</span>
+                                <span class="last5-chip">0</span>
+                                <span class="last5-chip">0</span>
+                                <span class="last5-chip">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn-player-odds" id="btn_p_yamal" onclick="toggleSelection('player_score', 'Lamine Yamal 進球', 3.60, 'btn_p_yamal')">3.60</button>
                 </div>
             </div>
 
@@ -249,8 +338,11 @@
                     <select id="res_scorer" class="host-input">
                         <option value="none">無人進球</option>
                         <option value="Lionel Messi 進球">Lionel Messi</option>
-                        <option value="Mikel Oyarzabal 進球">Mikel Oyarzabal</option>
                         <option value="Julian Alvarez 進球">Julian Alvarez</option>
+                        <option value="Lautaro Martinez 進球">Lautaro Martinez</option>
+                        <option value="Mikel Oyarzabal 進球">Mikel Oyarzabal</option>
+                        <option value="Ferran Torres 進球">Ferran Torres</option>
+                        <option value="Lamine Yamal 進球">Lamine Yamal</option>
                     </select>
                 </div>
             </div>
@@ -534,7 +626,7 @@
             } else if(marketKey === 'total_goals') {
                 ['btn_m3_o','btn_m3_u'].forEach(id => document.getElementById(id).classList.remove('active'));
             } else if(marketKey === 'player_score') {
-                ['btn_p_messi','btn_p_oyarzabal','btn_p_alvarez'].forEach(id => document.getElementById(id).classList.remove('active'));
+                ['btn_p_messi','btn_p_alvarez','btn_p_lautaro','btn_p_oyarzabal','btn_p_ferran','btn_p_yamal'].forEach(id => document.getElementById(id).classList.remove('active'));
             }
         }
 
