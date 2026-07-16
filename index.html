@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>bet365 - Same Game Parlay Simulator</title>
+    <title>fifa365 - Same Game Parlay Simulator</title>
     <style>
         :root {
             --b365-dark-green: #123123;
@@ -114,7 +114,7 @@
 <body>
 
     <header>
-        <div class="logo">bet365 <span style="font-size:11px; vertical-align:middle; background:#ff4d4d; color:white; padding:1px 4px; border-radius:3px;font-style:normal;">SGP</span></div>
+        <div class="logo">fifa365 <span style="font-size:11px; vertical-align:middle; background:#ff4d4d; color:white; padding:1px 4px; border-radius:3px;font-style:normal;">SGP</span></div>
         <div style="display: flex; align-items: center; gap: 10px;">
             <span id="currentUserTag" class="user-tag hidden"></span>
             <button class="mode-switcher" id="btnToggleMode" onclick="toggleMode()">切換至 Host 大螢幕面板</button>
@@ -124,9 +124,9 @@
     <div class="match-header">
         <div class="match-title">2026 FIFA World Cup Final - SAME GAME PARLAY</div>
         <div class="match-teams">
-            <span>法國 France</span>
+            <span>🇪🇸 西班牙 Spain</span>
             <span class="match-vs">v</span>
-            <span>西班牙 Spain</span>
+            <span>🇦🇷 阿根廷 Argentina</span>
         </div>
     </div>
 
@@ -144,26 +144,26 @@
             <div class="market-card">
                 <div class="market-title">Full Time Result<span class="market-subtitle">90分鐘+補時</span></div>
                 <div class="odds-grid-3">
-                    <button class="odds-button" id="btn_m1_1" onclick="toggleSelection('90分鐘+補時', '法國 勝', 2.35, 'btn_m1_1')">
-                        <span class="odds-label">法國</span><span class="odds-val">2.35</span>
+                    <button class="odds-button" id="btn_m1_1" onclick="toggleSelection('90分鐘+補時', '西班牙 勝', 2.25, 'btn_m1_1')">
+                        <span class="odds-label">🇪🇸 西班牙</span><span class="odds-val">2.25</span>
                     </button>
-                    <button class="odds-button" id="btn_m1_x" onclick="toggleSelection('90分鐘+補時', '和局', 3.25, 'btn_m1_x')">
-                        <span class="odds-label">和局</span><span class="odds-val">3.25</span>
+                    <button class="odds-button" id="btn_m1_x" onclick="toggleSelection('90分鐘+補時', '和局', 3.00, 'btn_m1_x')">
+                        <span class="odds-label">和局</span><span class="odds-val">3.00</span>
                     </button>
-                    <button class="odds-button" id="btn_m1_2" onclick="toggleSelection('90分鐘+補時', '西班牙 勝', 3.20, 'btn_m1_2')">
-                        <span class="odds-label">西班牙</span><span class="odds-val">3.20</span>
+                    <button class="odds-button" id="btn_m1_2" onclick="toggleSelection('90分鐘+補時', '阿根廷 勝', 3.60, 'btn_m1_2')">
+                        <span class="odds-label">🇦🇷 阿根廷</span><span class="odds-val">3.60</span>
                     </button>
                 </div>
             </div>
 
             <div class="market-card">
-                <div class="market-title">To Advance<span class="market-subtitle">晉級球隊</span></div>
+                <div class="market-title">To Lift the Trophy<span class="market-subtitle">奪冠球隊</span></div>
                 <div class="odds-grid-2">
-                    <button class="odds-button" id="btn_m2_1" onclick="toggleSelection('advance', '法國 晉級', 1.61, 'btn_m2_1')">
-                        <span class="odds-label">法國</span><span class="odds-val">1.61</span>
+                    <button class="odds-button" id="btn_m2_1" onclick="toggleSelection('advance', '西班牙 奪冠', 1.61, 'btn_m2_1')">
+                        <span class="odds-label">🇪🇸 西班牙</span><span class="odds-val">1.61</span>
                     </button>
-                    <button class="odds-button" id="btn_m2_2" onclick="toggleSelection('advance', '西班牙 晉級', 2.30, 'btn_m2_2')">
-                        <span class="odds-label">西班牙</span><span class="odds-val">2.30</span>
+                    <button class="odds-button" id="btn_m2_2" onclick="toggleSelection('advance', '阿根廷 奪冠', 2.30, 'btn_m2_2')">
+                        <span class="odds-label">🇦🇷 阿根廷</span><span class="odds-val">2.30</span>
                     </button>
                 </div>
             </div>
@@ -171,11 +171,11 @@
             <div class="market-card">
                 <div class="market-title">Goals Over/Under<span class="market-subtitle">90分鐘+補時</span></div>
                 <div class="odds-grid-2">
-                    <button class="odds-button" id="btn_m3_o" onclick="toggleSelection('total_goals', 'Over 2.5 (大球)', 1.90, 'btn_m3_o')">
-                        <span class="odds-label">Over 2.5</span><span class="odds-val">1.90</span>
+                    <button class="odds-button" id="btn_m3_o" onclick="toggleSelection('total_goals', 'Over 2.5 (大球)', 2.20, 'btn_m3_o')">
+                        <span class="odds-label">Over 2.5</span><span class="odds-val">2.20</span>
                     </button>
-                    <button class="odds-button" id="btn_m3_u" onclick="toggleSelection('total_goals', 'Under 2.5 (小球)', 1.90, 'btn_m3_u')">
-                        <span class="odds-label">Under 2.5</span><span class="odds-val">1.90</span>
+                    <button class="odds-button" id="btn_m3_u" onclick="toggleSelection('total_goals', 'Under 2.5 (小球)', 1.66, 'btn_m3_u')">
+                        <span class="odds-label">Under 2.5</span><span class="odds-val">1.66</span>
                     </button>
                 </div>
             </div>
@@ -184,7 +184,7 @@
                 <div class="market-title">Correct Score<span class="market-subtitle">90分鐘+補時</span></div>
                 <div class="score-selector-wrapper">
                     <div class="score-team-block">
-                        <div class="score-team-name">法國</div>
+                        <div class="score-team-name">🇪🇸 西班牙</div>
                         <div class="counter-btn-group">
                             <button class="btn-counter" onclick="adjustScore('home', -1)">-</button>
                             <span class="score-number" id="scoreHomeDisplay">0</span>
@@ -193,7 +193,7 @@
                     </div>
                     <div style="font-size: 24px; font-weight: bold; color:#555; margin-top:20px;">-</div>
                     <div class="score-team-block">
-                        <div class="score-team-name">西班牙</div>
+                        <div class="score-team-name">🇦🇷 阿根廷</div>
                         <div class="counter-btn-group">
                             <button class="btn-counter" onclick="adjustScore('away', -1)">-</button>
                             <span class="score-number" id="scoreAwayDisplay">0</span>
@@ -209,16 +209,16 @@
             <div class="market-card">
                 <div class="market-title">Player to Score<span class="market-subtitle">包括加時</span></div>
                 <div class="player-row">
-                    <div class="player-info"><div class="player-shirt" style="background:#005a42;">10</div><span>Kylian Mbappé (法國)</span></div>
-                    <button class="btn-player-odds" id="btn_p_mbappe" onclick="toggleSelection('player_score', 'Kylian Mbappé 進球', 2.05, 'btn_p_mbappe')">2.05</button>
+                    <div class="player-info"><div class="player-shirt" style="background:#75AADB;">10</div><span>Lionel Messi (阿根廷)</span></div>
+                    <button class="btn-player-odds" id="btn_p_messi" onclick="toggleSelection('player_score', 'Lionel Messi 進球', 2.50, 'btn_p_messi')">2.50</button>
                 </div>
                 <div class="player-row">
-                    <div class="player-info"><div class="player-shirt" style="background:#9a1a1a;">19</div><span>Lamine Yamal (西班牙)</span></div>
-                    <button class="btn-player-odds" id="btn_p_yamal" onclick="toggleSelection('player_score', 'Lamine Yamal 進球', 3.50, 'btn_p_yamal')">3.50</button>
+                    <div class="player-info"><div class="player-shirt" style="background:#c60b1e;">21</div><span>Mikel Oyarzabal (西班牙)</span></div>
+                    <button class="btn-player-odds" id="btn_p_oyarzabal" onclick="toggleSelection('player_score', 'Mikel Oyarzabal 進球', 2.50, 'btn_p_oyarzabal')">2.50</button>
                 </div>
                 <div class="player-row">
-                    <div class="player-info"><div class="player-shirt" style="background:#005a42;">11</div><span>Michael Olise (法國)</span></div>
-                    <button class="btn-player-odds" id="btn_p_olise" onclick="toggleSelection('player_score', 'Michael Olise 進球', 4.00, 'btn_p_olise')">4.00</button>
+                    <div class="player-info"><div class="player-shirt" style="background:#75AADB;">9</div><span>Julian Alvarez (阿根廷)</span></div>
+                    <button class="btn-player-odds" id="btn_p_alvarez" onclick="toggleSelection('player_score', 'Julian Alvarez 進球', 3.60, 'btn_p_alvarez')">3.60</button>
                 </div>
             </div>
 
@@ -238,19 +238,19 @@
             <div class="host-row">
                 <div class="host-input-group"><label>賽果最終比數 (如 2-1)</label><input type="text" id="res_score" class="host-input" placeholder="2-1"></div>
                 <div class="host-input-group">
-                    <label>最終晉級隊伍</label>
+                    <label>最終奪冠隊伍</label>
                     <select id="res_advance" class="host-input">
-                        <option value="法國 晉級">法國</option>
-                        <option value="西班牙 晉級">西班牙</option>
+                        <option value="西班牙 奪冠">🇪🇸 西班牙</option>
+                        <option value="阿根廷 奪冠">🇦🇷 阿根廷</option>
                     </select>
                 </div>
                 <div class="host-input-group">
                     <label>有進球的球員 (包括加時)</label>
                     <select id="res_scorer" class="host-input">
                         <option value="none">無人進球</option>
-                        <option value="Kylian Mbappé 進球">Kylian Mbappé</option>
-                        <option value="Lamine Yamal 進球">Lamine Yamal</option>
-                        <option value="Michael Olise 進球">Michael Olise</option>
+                        <option value="Lionel Messi 進球">Lionel Messi</option>
+                        <option value="Mikel Oyarzabal 進球">Mikel Oyarzabal</option>
+                        <option value="Julian Alvarez 進球">Julian Alvarez</option>
                     </select>
                 </div>
             </div>
@@ -452,7 +452,7 @@
 
         // ===== 相依盤口 (Correlated Markets) 衝突檢查 =====
         // 邏輯：如果兩個盤口的結果會互相決定彼此（例如知道正確比分就等於知道勝負），
-        // 就不允許同時選取，避免像 bet365 SGP 那樣「靠相依結果灌水賠率」。
+        // 就不允許同時選取，避免像 bet365 SGP 那樣「靠相依結果灌水賠率」（fifa365 模擬同樣規則）。
         function isDrawScore(scoreStr) {
             const parts = scoreStr.split('-');
             return parseInt(parts[0]) === parseInt(parts[1]);
@@ -460,7 +460,7 @@
         function getWinnerFromScore(scoreStr) {
             const parts = scoreStr.split('-');
             const home = parseInt(parts[0]), away = parseInt(parts[1]);
-            return home > away ? '法國 勝' : (home < away ? '西班牙 勝' : '和局');
+            return home > away ? '西班牙 勝' : (home < away ? '阿根廷 勝' : '和局');
         }
 
         // 檢查「即將選取」的 newKey/newChoice 是否與目前已選的其他盤口衝突
@@ -476,7 +476,7 @@
                     return "⚠️ 無法同時選取：正確比分已經直接決定了總進球數，與「Goals Over/Under」盤口重複，請先取消其中一項。";
                 }
                 if (sel['advance'] && !isDrawScore(newChoice)) {
-                    return "⚠️ 無法同時選取：此比分並非和局，代表90分鐘內已分勝負，晉級球隊已確定，與「To Advance」盤口重複。";
+                    return "⚠️ 無法同時選取：此比分並非和局，代表90分鐘內已分勝負，奪冠球隊已確定，與「To Lift the Trophy」盤口重複。";
                 }
             }
 
@@ -485,7 +485,7 @@
                     return "⚠️ 無法同時選取：已選的正確比分已經直接決定了勝負結果，請先取消正確比分。";
                 }
                 if (newChoice !== '和局' && sel['advance']) {
-                    return "⚠️ 無法同時選取：選擇某隊「勝」代表90分鐘內已分勝負，晉級球隊已確定，與「To Advance」盤口重複。";
+                    return "⚠️ 無法同時選取：選擇某隊「勝」代表90分鐘內已分勝負，奪冠球隊已確定，與「To Lift the Trophy」盤口重複。";
                 }
             }
 
@@ -534,7 +534,7 @@
             } else if(marketKey === 'total_goals') {
                 ['btn_m3_o','btn_m3_u'].forEach(id => document.getElementById(id).classList.remove('active'));
             } else if(marketKey === 'player_score') {
-                ['btn_p_mbappe','btn_p_yamal','btn_p_olise'].forEach(id => document.getElementById(id).classList.remove('active'));
+                ['btn_p_messi','btn_p_oyarzabal','btn_p_alvarez'].forEach(id => document.getElementById(id).classList.remove('active'));
             }
         }
 
